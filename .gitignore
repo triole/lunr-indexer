@@ -1,0 +1,4 @@
+build/
+testdata/
+tmp/
+go.trace
