@@ -1,11 +1,11 @@
 #!/bin/bash
 
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-basedir=$(echo "${scriptdir}" | grep -Po "[^/]+/[^/]+$")
+basedir=$(echo "${scriptdir}" | grep -Po "^.*(?=/.*/)")
 builddir="${basedir}/build"
 
 appname=$(echo ${basedir} | grep -Po "[^/]+$")
-tmpdir="${basedir}/tmp/assets"
+tmpdir="/tmp/assets"
 
 function getver() {
     f=$(

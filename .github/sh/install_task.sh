@@ -5,7 +5,9 @@ url="https://github.com/go-task/task/releases"
 grep_scheme='(?<=href\=\").*linux_amd64.*\.tar.gz(?=")'
 # additional_args="--strip-components 1"
 
-tfol="/usr/bin"
+tfol="/home/runner/.local/bin"
+
+echo $PATH
 
 function fail() {
     x=$?
@@ -36,7 +38,7 @@ function install() {
     rcmd "tar -xzf ${tmpfil} -C ${tfol} ${additional_args}"
 
     echo -e "${bin} installed\n"
-    ${bin} --version
+    ${tfol}/${bin} --version
 }
 
 ${bin} version >/dev/null 2>&1 || install

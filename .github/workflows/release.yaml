@@ -20,23 +20,19 @@ jobs:
                 with:
                     go-version: 1.16
             -
-                name: install task
+                name: Install task
                 run: .github/sh/install_task.sh
             -
-                name: make github config
+                name: Make github config
                 run: |
                     echo [user] >> ~/.gitconfig
                     echo name = olaf michaelis >> ~/.gitconfig
                     echo email = o.mic@web.de >> ~/.gitconfig
             -
-                name: Run Builder
-                with:
-                    version: latest
-                    args: release --rm-dist
+                name: Run builder
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                run: |
-                    task
+                run: task
             -
                 name: Gzip assets
                 run: .github/sh/zip_builds.sh
@@ -46,4 +42,4 @@ jobs:
                 env:
                     GITHUB_TOKEN: ${{ github.token }}
                 with:
-                    asset_paths: '["./tmp/assets/*"]'
+                    asset_paths: '["/tmp/assets/*"]'
