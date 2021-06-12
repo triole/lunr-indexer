@@ -7,7 +7,7 @@ vars:
         - armv8l:GOARCH=arm64
         - i686:GOARCH=386
         - x86_64:GOARCH=amd64
-
+        - x86_64_darwin:GOOS=darwin GOARCH=amd64
     TARGET_FOLDER: build
 
     SOURCE_FOLDER:
@@ -41,7 +41,7 @@ tasks:
         cmds:
             - |
                 {{range $i, $line := .ARCHS_TO_BUILD | splitLines}}
-                    {{if $line}}task build ta={{$line | regexFind ":[0-9a-zA-Z= ]+$" | trimPrefix ":"}} tf={{$line | regexFind "[0-9a-z+]+" }}{{end}}
+                    {{if $line}}task build ta={{$line | regexFind ":[0-9a-zA-Z= ]+$" | trimPrefix ":"}} tf={{$line | regexFind "[0-9a-z_+]+" }}{{end}}
                 {{end}}
 
     build:
@@ -80,3 +80,7 @@ tasks:
         cmds:
             - cmd: if [[ ! -f go.mod ]]; then go mod init {{.APP_NAME}}; fi
             - cmd: go mod tidy
+
+    test_ghwf:
+        cmds:
+            - cmd: act -s ARTIFACTORY_AUTH_TOKEN=${ARTIFACTORY_AUTH_TOKEN}
