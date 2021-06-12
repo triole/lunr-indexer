@@ -1,4 +1,4 @@
-module gmm
+module lunr-indexer
 
 go 1.16
 

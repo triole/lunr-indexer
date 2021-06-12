@@ -1,6 +1,13 @@
-version: '2'
+version: '3'
 
 vars:
+    ARCHS_TO_BUILD: |
+        - armv6l:GOARM=6 GOARCH=arm
+        - armv7l:GOARM=7 GOARCH=arm
+        - armv8l:GOARCH=arm64
+        - i686:GOARCH=386
+        - x86_64:GOARCH=amd64
+
     TARGET_FOLDER: build
 
     SOURCE_FOLDER:
@@ -24,27 +31,40 @@ vars:
     GIT_COMMIT_HASH:
         sh: git rev-parse HEAD
 
-    GOFILES:
-        sh: >-
-            find . -type f -regex ".*\.go$" \
-                | grep -v "_test.go"  \
-                | tr '\n' ' '
-
 tasks:
     default:
         cmds:
-            - task: build
+            - task: buildall
+
+    buildall:
+        desc: build all architectures in build list
+        cmds:
+            - |
+                {{range $i, $line := .ARCHS_TO_BUILD | splitLines}}
+                    {{if $line}}task build ta={{$line | regexFind ":[0-9a-zA-Z= ]+$" | trimPrefix ":"}} tf={{$line | regexFind "[0-9a-z+]+" }}{{end}}
+                {{end}}
 
     build:
+        desc: build binary, also called by buildall
+        cmds:
+            - cmd: mkdir -p $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}
+            - cmd: >-
+                CGO_ENABLED=0 {{.ta}}
+                go build -o $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME}}
+                -ldflags "-s -w -X 'main.BUILDTAGS={
+                _subversion: {{.GIT_COMMIT_NO}}, Author: {{.AUTHOR}},
+                Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}}
+                }'"
+                src/*.go
+            - cmd: file $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME}}
+
+    xbuild:
+        desc: extended build utilising my personal build script 'bob'
         cmds:
             - cmd: >-
-                bob -c
+                bob -b V -c
                 -f '_subversion: {{.GIT_COMMIT_NO}}, Author: {{.AUTHOR}},
                 Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}}'
-            - cmd: >-
-                find build/ -mindepth 1 -maxdepth 1 -type d
-                | xargs -i cp conf/* '{}'
-
     test:
         cmds:
             - cmd: >-
@@ -55,21 +75,8 @@ tasks:
     deploy:
         cp -rpf build/* ${HOME}/tools/arch/mybins/
 
-    run:
-        sources:
-            - conf/*
-            - src/*
-        method: timestamp
-        cmds:
-            - cmd: clear
-            - cmd: >-
-                r -c ../conf/gmm.toml
-                /media/bear/wostok/_media/video/series
-            - cmd: >-
-                r -c ../conf/gmm.toml
-                /media/bear/wostok/_media/video/movie
-
     mod:
+        desc: update go modules
         cmds:
-            - cmd: if [[ ! -f go.mod ]]; then go mod init gmm; fi
+            - cmd: if [[ ! -f go.mod ]]; then go mod init {{.APP_NAME}}; fi
             - cmd: go mod tidy
