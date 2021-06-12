@@ -9,10 +9,10 @@ import (
 func main() {
 	parseArgs()
 
-	makeLunrIndex(true)
-
 	if CLI.Watch == true {
 		watch()
+	} else {
+		makeLunrIndex(true)
 	}
 }
 
