@@ -7,7 +7,7 @@ import (
 )
 
 func writeLunrIndexJSON(content []lunrIndexEntry) {
-	fmt.Printf("\nWrite lunr index to %q\n", CLI.Output)
+	fmt.Printf("Write lunr index to %q\n", CLI.Output)
 	jsonData, err := json.Marshal(content)
 	if err != nil {
 		fmt.Println(err)

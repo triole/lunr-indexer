@@ -7,9 +7,18 @@ import (
 )
 
 func main() {
-	var lunrIndex []lunrIndexEntry
-
 	parseArgs()
+
+	makeLunrIndex(true)
+
+	if CLI.Watch == true {
+		watch()
+	}
+}
+
+func makeLunrIndex(showProgressBar bool) {
+	var bar *progressbar.ProgressBar
+	var lunrIndex []lunrIndexEntry
 
 	mdFiles := find(CLI.Path, ".md$")
 	ln := len(mdFiles)
@@ -17,8 +26,12 @@ func main() {
 	chin := make(chan string, CLI.Threads)
 	chout := make(chan lunrIndexEntry, CLI.Threads)
 
-	fmt.Printf("\nProcess %d md files, use %d threads\n\n", ln, CLI.Threads)
-	bar := progressbar.Default(int64(ln))
+	conditionalPrint(showProgressBar, "\n")
+	fmt.Printf("Process %d md files, use %d threads\n", ln, CLI.Threads)
+	if showProgressBar == true {
+		bar = progressbar.Default(int64(ln))
+		fmt.Printf("\n")
+	}
 
 	for _, fil := range mdFiles {
 		go parseMdFile(fil, chin, chout)
@@ -26,7 +39,9 @@ func main() {
 
 	c := 0
 	for li := range chout {
-		bar.Add(1)
+		if showProgressBar == true {
+			bar.Add(1)
+		}
 		lunrIndex = append(lunrIndex, li)
 		c++
 		if c >= ln {
@@ -36,5 +51,13 @@ func main() {
 		}
 	}
 
+	conditionalPrint(showProgressBar, "\n")
 	writeLunrIndexJSON(lunrIndex)
+	conditionalPrint(showProgressBar, "\n")
+}
+
+func conditionalPrint(b bool, s string) {
+	if b == true {
+		fmt.Printf(s)
+	}
 }
