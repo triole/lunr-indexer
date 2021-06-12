@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -20,6 +22,7 @@ var (
 var CLI struct {
 	Path        string `help:"path to scan, default is current dir" arg optional default:${curdir}`
 	Output      string `help:"json file to write output into" short:o default:${output}`
+	Threads     int    `help:"max threads, default no of avail. cpu threads" short:t default:${proc}`
 	VersionFlag bool   `help:"display version" short:V`
 }
 
@@ -36,6 +39,7 @@ func parseArgs() {
 		kong.Vars{
 			"curdir": curdir,
 			"output": path.Join(curdir, "lunr-index.json"),
+			"proc":   strconv.Itoa(runtime.NumCPU()),
 		},
 	)
 	_ = ctx.Run()

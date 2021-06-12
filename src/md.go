@@ -14,7 +14,7 @@ import (
 
 type lunrIndexEntry struct {
 	Content  indexEntryContent
-	MetaData map[string]interface{}
+	MetaData indexEntryMetadata
 	URL      string
 }
 
@@ -23,7 +23,11 @@ type indexEntryContent struct {
 	HTML string
 }
 
-func parseMdFile(filename string) (li lunrIndexEntry) {
+type indexEntryMetadata map[string]interface{}
+
+func parseMdFile(filename string, chin chan string, chout chan lunrIndexEntry) {
+	chin <- filename
+
 	var buf bytes.Buffer
 	source := readFile(filename)
 
@@ -41,16 +45,22 @@ func parseMdFile(filename string) (li lunrIndexEntry) {
 
 	metaData := meta.Get(context)
 
-	li.Content.Md = string(source)
-	li.Content.HTML = fmt.Sprintf("%q", buf)
-	li.MetaData = metaData
-
 	url := strings.Replace(filename, CLI.Path, "", -1)
 	if strings.HasPrefix("/", url) == false {
 		url = "/" + url
 	}
-	li.URL = url
-	return
+
+	li := lunrIndexEntry{
+		Content: indexEntryContent{
+			Md:   string(source),
+			HTML: fmt.Sprintf("%q", buf),
+		},
+		MetaData: metaData,
+		URL:      url,
+	}
+
+	chout <- li
+	_ = <-chin
 }
 
 func readFile(filename string) (b []byte) {
