@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func main() {
 	parseArgs()
 
@@ -13,5 +11,5 @@ func main() {
 		break
 	}
 
-	fmt.Printf("%+v\n", lunrIndex)
+	writeLunrIndexJSON(lunrIndex)
 }

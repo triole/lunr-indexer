@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 
@@ -18,6 +19,7 @@ var (
 
 var CLI struct {
 	Path        string `help:"path to scan, default is current dir" arg optional default:${curdir}`
+	Output      string `help:"json file to write output into" short:o default:${output}`
 	VersionFlag bool   `help:"display version" short:V`
 }
 
@@ -33,6 +35,7 @@ func parseArgs() {
 		}),
 		kong.Vars{
 			"curdir": curdir,
+			"output": path.Join(curdir, "lunr-index.json"),
 		},
 	)
 	_ = ctx.Run()
