@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/yuin/goldmark"
 	goldmarkmeta "github.com/yuin/goldmark-meta"
@@ -14,6 +15,7 @@ import (
 type lunrIndexEntry struct {
 	Content  indexEntryContent
 	MetaData map[string]interface{}
+	URL      string
 }
 
 type indexEntryContent struct {
@@ -42,6 +44,12 @@ func parseMdFile(filename string) (li lunrIndexEntry) {
 	li.Content.Md = string(source)
 	li.Content.HTML = fmt.Sprintf("%q", buf)
 	li.MetaData = metaData
+
+	url := strings.Replace(filename, CLI.Path, "", -1)
+	if strings.HasPrefix("/", url) == false {
+		url = "/" + url
+	}
+	li.URL = url
 	return
 }
 
