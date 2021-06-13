@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strings"
 
 	"github.com/yuin/goldmark"
@@ -11,6 +12,20 @@ import (
 	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/parser"
 )
+
+type lunrIndex []lunrIndexEntry
+
+func (li lunrIndex) Len() int {
+	return len(li)
+}
+
+func (li lunrIndex) Less(i, j int) bool {
+	return li[i].URL < li[j].URL
+}
+
+func (li lunrIndex) Swap(i, j int) {
+	li[i], li[j] = li[j], li[i]
+}
 
 type lunrIndexEntry struct {
 	Content  indexEntryContent
@@ -25,7 +40,7 @@ type indexEntryContent struct {
 
 type indexEntryMetadata map[string]interface{}
 
-func parseMdFile(filename string, chin chan string, chout chan lunrIndexEntry) {
+func parseMdFile(filename string, mdPath string, chin chan string, chout chan lunrIndexEntry) {
 	chin <- filename
 
 	var buf bytes.Buffer
@@ -40,13 +55,15 @@ func parseMdFile(filename string, chin chan string, chout chan lunrIndexEntry) {
 	if err := markdown.Convert(
 		source, &buf, parser.WithContext(context),
 	); err != nil {
-		lg.LogfIfErr(err, "Markdown parse fail %q", filename)
+		lg.LogIfErr(err, "Markdown parse fail %q", filename)
 		return
 	}
 
 	metaData := meta.Get(context)
 
-	url := strings.Replace(filename, CLI.Path, "", -1)
+	url := strings.Replace(filename, mdPath, "", -1)
+	re := regexp.MustCompile("^/*")
+	url = re.ReplaceAllString(url, "")
 	if strings.HasPrefix("/", url) == false {
 		url = "/" + url
 	}
@@ -66,6 +83,6 @@ func parseMdFile(filename string, chin chan string, chout chan lunrIndexEntry) {
 
 func readFile(filename string) (b []byte) {
 	b, err := ioutil.ReadFile(filename)
-	lg.LogfIfErr(err, "Can not read file %q", filename)
+	lg.LogIfErr(err, "Can not read file %q", filename)
 	return
 }

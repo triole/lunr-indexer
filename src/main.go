@@ -13,56 +13,66 @@ var (
 
 func main() {
 	parseArgs()
-	lg = lilog.Init(CLI.LogFile)
+
+	lg = lilog.Init(absPath(CLI.LogFile))
+
+	mdPath := absPath(CLI.Path)
+	outJSON := absPath(CLI.Output)
 
 	if CLI.Watch == true {
-		watch()
+		watch(mdPath, outJSON)
 	} else {
-		makeLunrIndex(true)
+		makeLunrIndex(mdPath, outJSON, CLI.Threads, true)
 	}
 }
 
-func makeLunrIndex(showProgressBar bool) {
+func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar bool) {
 	start := time.Now()
 
 	var bar *progressbar.ProgressBar
-	var lunrIndex []lunrIndexEntry
+	var lunrIndex lunrIndex
 
-	mdFiles := find(CLI.Path, ".md$")
+	mdFiles := find(mdPath, ".md$")
 	ln := len(mdFiles)
 
-	chin := make(chan string, CLI.Threads)
-	chout := make(chan lunrIndexEntry, CLI.Threads)
+	if len(mdFiles) < 1 {
+		lg.LogWarn("No md files found in %q\n", mdPath)
+	} else {
+		chin := make(chan string, threads)
+		chout := make(chan lunrIndexEntry, threads)
 
-	potentialEmptyLine()
-	lg.Logf("Process %d md file(s), threads %d\n", ln, CLI.Threads)
-	potentialEmptyLine()
+		potentialEmptyLine()
+		lg.Log("No of md files to process %d\n", ln)
+		lg.Log("Parallel threads %d\n", threads)
+		potentialEmptyLine()
 
-	if showProgressBar == true {
-		bar = progressbar.Default(int64(ln))
-	}
-
-	for _, fil := range mdFiles {
-		go parseMdFile(fil, chin, chout)
-	}
-
-	c := 0
-	for li := range chout {
 		if showProgressBar == true {
-			bar.Add(1)
+			bar = progressbar.Default(int64(ln))
 		}
-		lunrIndex = append(lunrIndex, li)
-		c++
-		if c >= ln {
-			close(chin)
-			close(chout)
-			break
+
+		for _, fil := range mdFiles {
+			go parseMdFile(fil, mdPath, chin, chout)
 		}
+
+		c := 0
+		for li := range chout {
+			if showProgressBar == true {
+				bar.Add(1)
+			}
+			lunrIndex = append(lunrIndex, li)
+			c++
+			if c >= ln {
+				close(chin)
+				close(chout)
+				break
+			}
+		}
+
+		potentialEmptyLine()
+		writeLunrIndexJSON(lunrIndex, outFile)
+
+		lg.Log("Done. It took %s\n", time.Since(start))
+		potentialEmptyLine()
 	}
 
-	potentialEmptyLine()
-	writeLunrIndexJSON(lunrIndex)
-
-	lg.Logf("Done. It took %s\n", time.Since(start))
-	potentialEmptyLine()
 }

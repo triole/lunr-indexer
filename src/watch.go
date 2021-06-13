@@ -8,7 +8,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func watch() {
+func watch(mdPath string, outJSON string) {
 	w := watcher.New()
 
 	r := regexp.MustCompile(".md$")
@@ -16,7 +16,7 @@ func watch() {
 
 	chin := make(chan time.Time)
 	go ticker(chin)
-	go runRebuildOnce(chin)
+	go runRebuildOnce(mdPath, outJSON, chin)
 
 	go func() {
 		for {
@@ -31,7 +31,7 @@ func watch() {
 		}
 	}()
 
-	if err := w.AddRecursive(CLI.Path); err != nil {
+	if err := w.AddRecursive(mdPath); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -44,7 +44,7 @@ func watch() {
 	}
 }
 
-func runRebuildOnce(chin chan time.Time) {
+func runRebuildOnce(mdPath string, outJSON string, chin chan time.Time) {
 	current := time.Now()
 	last := time.Now()
 	diff := diffReached(last, current)
@@ -55,7 +55,7 @@ func runRebuildOnce(chin chan time.Time) {
 		current = t
 		diff = diffReached(last, current)
 		if lastDiff == false && diff == true {
-			makeLunrIndex(false)
+			makeLunrIndex(mdPath, outJSON, CLI.Threads, false)
 		}
 	}
 }
