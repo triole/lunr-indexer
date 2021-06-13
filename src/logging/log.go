@@ -1,21 +1,22 @@
 package Logging
 
-import (
-	"fmt"
-)
+import "os"
 
-// Logf logs an info message
-func (l Logging) Logf(msg string, a ...interface{}) {
-	fmt.Printf(msg, a...)
-	str := fmt.Sprintf(msg, a...)
-	l.Log.Info(l.cleanString(str))
+// Log logs an info message
+func (l Logging) Log(str string, itf interface{}) {
+	lre, msg := l.initContent(str, itf)
+	lre.Info(msg)
 }
 
-// LogfIfErr logs an error if passed error arg is not nil
-func (l Logging) LogfIfErr(err error, msg string, a ...interface{}) {
-	if err != nil {
-		fmt.Printf(msg, a...)
-		str := fmt.Sprintf(msg, a...)
-		l.Log.Error(l.cleanString(str))
-	}
+// LogWarn logs a warning message
+func (l Logging) LogWarn(str string, itf interface{}) {
+	lre, msg := l.initContent(str, itf)
+	lre.Warn(msg)
+}
+
+// LogFatal logs a fatal message
+func (l Logging) LogFatal(str string, itf interface{}) {
+	lre, msg := l.initContent(str, itf)
+	lre.Fatal(msg)
+	os.Exit(1)
 }

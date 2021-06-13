@@ -8,9 +8,10 @@ import (
 
 // Logging contains all log output operations
 type Logging struct {
-	Log       *logrus.Logger
-	LogFile   string
-	LogFileOS *os.File
+	Logger        *logrus.Logger
+	LogFile       string
+	LogFileOS     *os.File
+	PrintMessages bool
 }
 
 // Init does exactly what it says, initializing the Logging class
@@ -18,11 +19,16 @@ func Init(logFile string) (l Logging) {
 	var err error
 	var log = logrus.New()
 	l.LogFile = logFile
+	l.PrintMessages = true
 
-	log.SetFormatter(&logrus.TextFormatter{
-		DisableColors:   false,
-		FullTimestamp:   true,
+	log.SetFormatter(&logrus.JSONFormatter{
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "date",
+			logrus.FieldKeyLevel: "level",
+			logrus.FieldKeyMsg:   "msg",
+		},
 		TimestampFormat: "2006-01-02 15:04:05.000 MST",
+		PrettyPrint:     false,
 	})
 
 	l.LogFileOS, err = os.OpenFile(
@@ -31,9 +37,9 @@ func Init(logFile string) (l Logging) {
 	if err == nil {
 		log.Out = l.LogFileOS
 	} else {
-		log.Info("Failed to log to file, using default stderr")
+		log.Info("Failed to log to file, use default stderr")
 	}
 
-	l.Log = log
+	l.Logger = log
 	return
 }
