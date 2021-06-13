@@ -10,8 +10,8 @@ vars:
         - freebsd_arm64:GOOS=freebsd GOARCH=arm64
         - freebsd_i686:GOOS=freebsd GOARCH=386
         - freebsd_x86_64:GOOS=freebsd GOARCH=amd64
-        - darwin_x86_64:GOOS=darwin GOARCH=amd64
         - darwin_arm64:GOOS=darwin GOARCH=arm64
+        - darwin_x86_64:GOOS=darwin GOARCH=amd64
     TARGET_FOLDER: build
 
     SOURCE_FOLDER:
@@ -41,6 +41,7 @@ vars:
 tasks:
     default:
         cmds:
+            - task: test
             - task: buildall
 
     buildall:
@@ -66,13 +67,6 @@ tasks:
                 src/*.go
             - cmd: file $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME}}
 
-    xbuild:
-        desc: extended build utilising my personal build script 'bob'
-        cmds:
-            - cmd: >-
-                bob -b V -c
-                -f '_subversion: {{.GIT_COMMIT_NO}}, Author: {{.AUTHOR}},
-                Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}}'
     test:
         cmds:
             - cmd: >-

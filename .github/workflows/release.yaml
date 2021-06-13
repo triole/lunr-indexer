@@ -32,7 +32,9 @@ jobs:
                 name: Run builder
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                run: task
+                run: |
+                    task mod
+                    task
             -
                 name: Gzip assets
                 run: .github/sh/zip_builds.sh
