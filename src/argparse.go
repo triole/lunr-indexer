@@ -25,6 +25,7 @@ var CLI struct {
 	Threads     int    `help:"max threads, default no of avail. cpu threads" short:t default:${proc}`
 	Watch       bool   `help:"watch folder and run rebuild on file change" short:w`
 	Interval    int32  `help:"watch interval to check for changes in seconds" default:60 short:i`
+	LogFile     string `help:"log file" default:${logfile} short:l`
 	VersionFlag bool   `help:"display version" short:V`
 }
 
@@ -39,9 +40,10 @@ func parseArgs() {
 			Summary: true,
 		}),
 		kong.Vars{
-			"curdir": curdir,
-			"output": path.Join(curdir, "lunr-index.json"),
-			"proc":   strconv.Itoa(runtime.NumCPU()),
+			"curdir":  curdir,
+			"logfile": path.Join("/tmp", alnum(appName)+".log"),
+			"output":  path.Join(curdir, "lunr-index.json"),
+			"proc":    strconv.Itoa(runtime.NumCPU()),
 		},
 	)
 	_ = ctx.Run()
@@ -58,4 +60,10 @@ func printBuildTags(buildtags string) {
 	s := regexp.ReplaceAllString(buildtags, "\n")
 	s = strings.Replace(s, "_subversion: ", "Version: "+appMainversion+".", -1)
 	fmt.Printf("%s\n", s)
+}
+
+func alnum(s string) string {
+	s = strings.ToLower(s)
+	re := regexp.MustCompile("[^a-z0-9_-]")
+	return re.ReplaceAllString(s, "-")
 }

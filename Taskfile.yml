@@ -2,12 +2,16 @@ version: '3'
 
 vars:
     ARCHS_TO_BUILD: |
-        - armv6l:GOARM=6 GOARCH=arm
-        - armv7l:GOARM=7 GOARCH=arm
-        - armv8l:GOARCH=arm64
-        - i686:GOARCH=386
-        - x86_64:GOARCH=amd64
-        - x86_64_darwin:GOOS=darwin GOARCH=amd64
+        - linux_armv6l:GOOS=linux GOARCH=arm GOARM=6
+        - linux_armv7l:GOOS=linux GOARCH=arm GOARM=7
+        - linux_armv64:GOOS=linux GOARCH=arm64
+        - linux_i686:GOOS=linux GOARCH=386
+        - linux_x86_64:GOOS=linux GOARCH=amd64
+        - freebsd_arm64:GOOS=freebsd GOARCH=arm64
+        - freebsd_i686:GOOS=freebsd GOARCH=386
+        - freebsd_x86_64:GOOS=freebsd GOARCH=amd64
+        - darwin_x86_64:GOOS=darwin GOARCH=amd64
+        - darwin_arm64:GOOS=darwin GOARCH=arm64
     TARGET_FOLDER: build
 
     SOURCE_FOLDER:
@@ -31,6 +35,9 @@ vars:
     GIT_COMMIT_HASH:
         sh: git rev-parse HEAD
 
+    CURDIR:
+        sh: pwd
+
 tasks:
     default:
         cmds:
@@ -41,8 +48,9 @@ tasks:
         cmds:
             - |
                 {{range $i, $line := .ARCHS_TO_BUILD | splitLines}}
-                    {{if $line}}task build ta={{$line | regexFind ":[0-9a-zA-Z= ]+$" | trimPrefix ":"}} tf={{$line | regexFind "[0-9a-z_+]+" }}{{end}}
+                    {{if $line}}task build ta="{{$line | regexFind "GOOS.*" }}" tf="{{$line | regexFind "[0-9a-z_+]+" }}"{{end}}
                 {{end}}
+                find build/ -type f | sort | xargs md5sum
 
     build:
         desc: build binary, also called by buildall
@@ -76,10 +84,15 @@ tasks:
         cp -rpf build/* ${HOME}/tools/arch/mybins/
 
     mod:
-        desc: update go modules
+        desc: update go modules, add submodules to go root
         cmds:
             - cmd: if [[ ! -f go.mod ]]; then go mod init {{.APP_NAME}}; fi
             - cmd: go mod tidy
+            - cmd: mkdir -p "${GOROOT}/src/{{.APP_NAME}}"
+            - cmd: >-
+                ln -fs
+                "{{.CURDIR}}/src/logging"
+                "${GOROOT}/src/{{.APP_NAME}}/logging"
 
     test_ghwf:
         cmds:

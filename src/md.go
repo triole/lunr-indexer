@@ -40,7 +40,8 @@ func parseMdFile(filename string, chin chan string, chout chan lunrIndexEntry) {
 	if err := markdown.Convert(
 		source, &buf, parser.WithContext(context),
 	); err != nil {
-		panic(err)
+		lg.LogfIfErr(err, "Markdown parse fail %q", filename)
+		return
 	}
 
 	metaData := meta.Get(context)
@@ -65,8 +66,6 @@ func parseMdFile(filename string, chin chan string, chout chan lunrIndexEntry) {
 
 func readFile(filename string) (b []byte) {
 	b, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err)
-	}
+	lg.LogfIfErr(err, "Can not read file %q", filename)
 	return
 }

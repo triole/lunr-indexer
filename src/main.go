@@ -1,13 +1,19 @@
 package main
 
 import (
-	"fmt"
+	lilog "lunr-indexer/logging"
+	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
 
+var (
+	lg lilog.Logging
+)
+
 func main() {
 	parseArgs()
+	lg = lilog.Init(CLI.LogFile)
 
 	if CLI.Watch == true {
 		watch()
@@ -17,6 +23,8 @@ func main() {
 }
 
 func makeLunrIndex(showProgressBar bool) {
+	start := time.Now()
+
 	var bar *progressbar.ProgressBar
 	var lunrIndex []lunrIndexEntry
 
@@ -26,11 +34,12 @@ func makeLunrIndex(showProgressBar bool) {
 	chin := make(chan string, CLI.Threads)
 	chout := make(chan lunrIndexEntry, CLI.Threads)
 
-	conditionalPrint(showProgressBar, "\n")
-	fmt.Printf("Process %d md files, use %d threads\n", ln, CLI.Threads)
+	potentialEmptyLine()
+	lg.Logf("Process %d md file(s), threads %d\n", ln, CLI.Threads)
+	potentialEmptyLine()
+
 	if showProgressBar == true {
 		bar = progressbar.Default(int64(ln))
-		fmt.Printf("\n")
 	}
 
 	for _, fil := range mdFiles {
@@ -51,13 +60,9 @@ func makeLunrIndex(showProgressBar bool) {
 		}
 	}
 
-	conditionalPrint(showProgressBar, "\n")
+	potentialEmptyLine()
 	writeLunrIndexJSON(lunrIndex)
-	conditionalPrint(showProgressBar, "\n")
-}
 
-func conditionalPrint(b bool, s string) {
-	if b == true {
-		fmt.Printf(s)
-	}
+	lg.Logf("Done. It took %s\n", time.Since(start))
+	potentialEmptyLine()
 }
