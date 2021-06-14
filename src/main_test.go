@@ -18,8 +18,8 @@ func TestMakeLunrIndex(t *testing.T) {
 }
 
 func runTest(mdFolder string, t *testing.T) {
-	logFile := "/tmp/lunr-indexer_test.log"
-	outFile := "/tmp/lunr-indexer_test.json"
+	logFile := path.Join(os.TempDir(), "lunr-indexer_test.log")
+	outFile := path.Join(os.TempDir(), "lunr-indexer_test.json")
 
 	var liAssert lunrIndex
 	var li lunrIndex

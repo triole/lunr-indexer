@@ -14,6 +14,12 @@ func (l Logging) LogWarn(str string, itf interface{}) {
 	lre.Warn(msg)
 }
 
+// LogError logs an error message
+func (l Logging) LogError(str string, itf interface{}) {
+	lre, msg := l.initContent(str, itf)
+	lre.Error(msg)
+}
+
 // LogFatal logs a fatal message
 func (l Logging) LogFatal(str string, itf interface{}) {
 	lre, msg := l.initContent(str, itf)

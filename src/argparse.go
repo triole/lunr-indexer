@@ -25,6 +25,7 @@ var CLI struct {
 	Threads     int    `help:"max threads, default no of avail. cpu threads" short:t default:${proc}`
 	Watch       bool   `help:"watch folder and run rebuild on file change" short:w`
 	Interval    int32  `help:"watch interval to check for changes in seconds" default:60 short:i`
+	Force       bool   `help:"force overwrite of output json file" default=false short:f`
 	LogFile     string `help:"log file" default:${logfile} short:l`
 	VersionFlag bool   `help:"display version" short:V`
 }
@@ -41,7 +42,7 @@ func parseArgs() {
 		}),
 		kong.Vars{
 			"curdir":  curdir,
-			"logfile": path.Join("/tmp", alnum(appName)+".log"),
+			"logfile": path.Join(os.TempDir(), alnum(appName)+".log"),
 			"output":  path.Join(curdir, "lunr-index.json"),
 			"proc":    strconv.Itoa(runtime.NumCPU()),
 		},

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	lilog "lunr-indexer/logging"
+	"os"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
@@ -18,6 +20,12 @@ func main() {
 
 	mdPath := absPath(CLI.Path)
 	outJSON := absPath(CLI.Output)
+
+	if _, err := os.Stat(outJSON); os.IsNotExist(err) == false && CLI.Force == false {
+		lg.LogWarn("Exitting. Output json file exists %q\n", outJSON)
+		fmt.Println("Either choose a different output target or use -f/--force to overwrite")
+		os.Exit(0)
+	}
 
 	if CLI.Watch == true {
 		watch(mdPath, outJSON)
