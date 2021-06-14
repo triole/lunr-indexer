@@ -13,7 +13,7 @@ Lunr Indexer recursively finds all markdown files inside a directory and builds 
 
 ## Index JSON Layout
 
-To check the layout of the resulting index json have a look at the test data inside the repo. For example [here](triole/lunr-indexer/blob/master/testdata/set1/assert.json).
+To check the layout of the resulting index json have a look at the test data inside the repo. For example [here](https://github.com/triole/lunr-indexer/blob/master/testdata/set1/assert.json).
 
 ## Help & Usage
 
