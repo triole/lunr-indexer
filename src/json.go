@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"sort"
 )
@@ -12,7 +11,7 @@ func writeLunrIndexJSON(content lunrIndex, outFile string) {
 	sort.Sort(lunrIndex(content))
 	jsonData, err := json.Marshal(content)
 	if err != nil {
-		fmt.Println(err)
+		lg.LogIfErr(err, "Can not marshal lunr index json %q", content)
 	}
 	_ = ioutil.WriteFile(outFile, jsonData, 0644)
 }

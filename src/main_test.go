@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	lilog "lunr-indexer/logging"
 	"os"
@@ -28,13 +27,17 @@ func runTest(mdFolder string, t *testing.T) {
 	lg.PrintMessages = false
 	CLI.Watch = true
 
-	p, _ := filepath.Abs(mdFolder)
+	p, err := filepath.Abs(mdFolder)
+	if err != nil {
+		t.Errorf("Test failed. Can not set md folder %q", mdFolder)
+	}
 	makeLunrIndex(p, outFile, 4, false)
 
-	li = readLunrIndexJSON(outFile)
+	li = readLunrIndexJSON(outFile, t)
 	assertJSONFile := path.Join(mdFolder, "assert.json")
+
 	if _, err := os.Stat(assertJSONFile); err == nil {
-		liAssert = readLunrIndexJSON(assertJSONFile)
+		liAssert = readLunrIndexJSON(assertJSONFile, t)
 	}
 
 	if len(liAssert) > 0 {
@@ -44,15 +47,15 @@ func runTest(mdFolder string, t *testing.T) {
 	}
 }
 
-func readLunrIndexJSON(filename string) (li lunrIndex) {
+func readLunrIndexJSON(filename string, t *testing.T) (li lunrIndex) {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Printf("An error occured: %q", err)
-		os.Exit(1)
-	}
-	err = json.Unmarshal([]byte(content), &li)
-	if err != nil {
-		panic(err)
+		t.Errorf("Can not open file %q", filename)
+	} else {
+		err = json.Unmarshal([]byte(content), &li)
+		if err != nil {
+			t.Errorf("Failed to unmarshal %q", filename)
+		}
 	}
 	return li
 }
