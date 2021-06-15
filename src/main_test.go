@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -17,8 +18,10 @@ func TestMakeLunrIndex(t *testing.T) {
 }
 
 func runTest(mdFolder string, t *testing.T) {
-	logFile := path.Join(os.TempDir(), "lunr-indexer_test.log")
-	outFile := path.Join(os.TempDir(), "lunr-indexer_test.json")
+	arr := strings.Split(mdFolder, "/")
+	suffix := arr[len(arr)-1]
+	logFile := path.Join(os.TempDir(), "lunr-indexer_test_"+suffix+".log")
+	outFile := path.Join(os.TempDir(), "lunr-indexer_test_"+suffix+".json")
 
 	var liAssert lunrIndex
 	var li lunrIndex
@@ -31,18 +34,20 @@ func runTest(mdFolder string, t *testing.T) {
 	if err != nil {
 		t.Errorf("Test failed. Can not set md folder %q", mdFolder)
 	}
-	makeLunrIndex(p, outFile, 4, false)
+	if mdFolder != "../testdata/no_md" {
+		makeLunrIndex(p, outFile, 4, false)
 
-	li = readLunrIndexJSON(outFile, t)
-	assertJSONFile := path.Join(mdFolder, "assert.json")
+		li = readLunrIndexJSON(outFile, t)
+		assertJSONFile := path.Join(mdFolder, "assert.json")
 
-	if _, err := os.Stat(assertJSONFile); err == nil {
-		liAssert = readLunrIndexJSON(assertJSONFile, t)
-	}
+		if _, err := os.Stat(assertJSONFile); err == nil {
+			liAssert = readLunrIndexJSON(assertJSONFile, t)
+		}
 
-	if len(liAssert) > 0 {
-		if reflect.DeepEqual(li, liAssert) == false {
-			t.Errorf("DeepEqual failed %q != %q", assertJSONFile, outFile)
+		if len(liAssert) > 0 {
+			if reflect.DeepEqual(li, liAssert) == false {
+				t.Errorf("DeepEqual failed %q != %q", assertJSONFile, outFile)
+			}
 		}
 	}
 }

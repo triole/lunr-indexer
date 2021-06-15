@@ -12,6 +12,8 @@ func writeLunrIndexJSON(content lunrIndex, outFile string) {
 	jsonData, err := json.Marshal(content)
 	if err != nil {
 		lg.LogIfErr(err, "Can not marshal lunr index json %q", content)
+	} else {
+		err = ioutil.WriteFile(outFile, jsonData, 0644)
+		lg.LogIfErr(err, "Can not write file %q", outFile)
 	}
-	_ = ioutil.WriteFile(outFile, jsonData, 0644)
 }
