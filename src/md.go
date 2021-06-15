@@ -20,7 +20,7 @@ func (li lunrIndex) Len() int {
 }
 
 func (li lunrIndex) Less(i, j int) bool {
-	return li[i].URL < li[j].URL
+	return li[i].Href < li[j].Href
 }
 
 func (li lunrIndex) Swap(i, j int) {
@@ -28,14 +28,11 @@ func (li lunrIndex) Swap(i, j int) {
 }
 
 type lunrIndexEntry struct {
-	Content  indexEntryContent
-	MetaData indexEntryMetadata
-	URL      string
-}
-
-type indexEntryContent struct {
-	Md   string
-	HTML string
+	Title       string `json:"title"`
+	Href        string `json:"href"`
+	Tags        string `json:"tags"`
+	ContentMD   string `json:"content_md"`
+	ContentHTML string `json:"content_html"`
 }
 
 type indexEntryMetadata map[string]interface{}
@@ -61,20 +58,24 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 
 	metaData := meta.Get(context)
 
-	url := strings.Replace(filename, mdPath, "", -1)
+	href := strings.Replace(filename, mdPath, "", -1)
 	re := regexp.MustCompile("^/*")
-	url = re.ReplaceAllString(url, "")
-	if strings.HasPrefix("/", url) == false {
-		url = "/" + url
+	href = re.ReplaceAllString(href, "")
+	if strings.HasPrefix("/", href) == false {
+		href = "/" + href
 	}
 
+	// TODO: think about generating better tags
+	t := strings.Split(href[1:], "/")
+	tags := strings.Join(t[0:len(t)-1], ", ")
+
 	li := lunrIndexEntry{
-		Content: indexEntryContent{
-			Md:   string(source),
-			HTML: fmt.Sprintf("%q", buf),
-		},
-		MetaData: metaData,
-		URL:      url,
+		// MetaData:    metaData,
+		Title:       getFromMeta("title", metaData, href),
+		Href:        href,
+		Tags:        tags,
+		ContentMD:   string(source),
+		ContentHTML: fmt.Sprintf("%q", buf),
 	}
 
 	chout <- li
@@ -84,5 +85,13 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 func readFile(filename string) (b []byte) {
 	b, err := ioutil.ReadFile(filename)
 	lg.LogIfErr(err, "Can not read file %q", filename)
+	return
+}
+
+func getFromMeta(key string, meta map[string]interface{}, alt string) (r string) {
+	r = alt
+	if val, ok := meta[key]; ok {
+		r = val.(string)
+	}
 	return
 }
