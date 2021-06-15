@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
-	"io/ioutil"
 	"regexp"
 	"strings"
 
@@ -28,11 +26,11 @@ func (li lunrIndex) Swap(i, j int) {
 }
 
 type lunrIndexEntry struct {
-	Title       string `json:"title"`
-	Href        string `json:"href"`
-	Tags        string `json:"tags"`
-	ContentMD   string `json:"content_md"`
-	ContentHTML string `json:"content_html"`
+	Title   string `json:"title"`
+	Href    string `json:"href"`
+	Tags    string `json:"tags"`
+	Snippet string `json:"snippet"`
+	Content string `json:"content"`
 }
 
 type indexEntryMetadata map[string]interface{}
@@ -48,6 +46,7 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 			goldmarkmeta.Meta,
 		),
 	)
+
 	context := parser.NewContext()
 	if err := markdown.Convert(
 		source, &buf, parser.WithContext(context),
@@ -69,23 +68,35 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 	t := strings.Split(href[1:], "/")
 	tags := strings.Join(t[0:len(t)-1], ", ")
 
+	// TODO: improve snippet generator
+	snippet := ""
+	maxsniplen := 500
+	rx, _ := regexp.Compile("^[A-Za-z0-9].+$")
+	for _, el := range strings.Split(string(source), "\n") {
+		t := ""
+		if strings.Contains(el, ":") == false {
+			t = el
+		}
+		t = rx.FindString(t)
+		if len(t) > 10 && len(snippet) < maxsniplen {
+			snippet += t + "<br>"
+		}
+		if len(snippet) >= maxsniplen {
+			break
+		}
+	}
+
 	li := lunrIndexEntry{
 		// MetaData:    metaData,
-		Title:       getFromMeta("title", metaData, href),
-		Href:        href,
-		Tags:        tags,
-		ContentMD:   string(source),
-		ContentHTML: fmt.Sprintf("%q", buf),
+		Title:   getFromMeta("title", metaData, href),
+		Href:    href,
+		Tags:    tags,
+		Snippet: snippet,
+		Content: string(source),
 	}
 
 	chout <- li
 	_ = <-chin
-}
-
-func readFile(filename string) (b []byte) {
-	b, err := ioutil.ReadFile(filename)
-	lg.LogIfErr(err, "Can not read file %q", filename)
-	return
 }
 
 func getFromMeta(key string, meta map[string]interface{}, alt string) (r string) {
