@@ -33,8 +33,8 @@ jobs:
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                 run: |
-                    task mod
-                    task
+                    /home/runner/.local/bin/task mod
+                    /home/runner/.local/bin/task task_folder=/home/runner/.local/bin/
             -
                 name: Gzip assets
                 run: .github/sh/zip_builds.sh
@@ -44,4 +44,4 @@ jobs:
                 env:
                     GITHUB_TOKEN: ${{ github.token }}
                 with:
-                    asset_paths: '["/tmp/assets/*"]'
+                    asset_paths: '["/tmp/gh_workflow_assets/*"]'

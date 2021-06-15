@@ -5,7 +5,7 @@ basedir=$(echo "${scriptdir}" | grep -Po "^.*(?=/.*/)")
 builddir="${basedir}/build"
 
 appname=$(echo ${basedir} | grep -Po "[^/]+$")
-tmpdir="/tmp/assets"
+tmpdir="/tmp/gh_workflow_assets"
 
 function getver() {
     f=$(

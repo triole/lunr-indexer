@@ -7,8 +7,6 @@ grep_scheme='(?<=href\=\").*linux_amd64.*\.tar.gz(?=")'
 
 tfol="/home/runner/.local/bin"
 
-echo $PATH
-
 function fail() {
     x=$?
     echo "last command failed, exitcode ${x}"

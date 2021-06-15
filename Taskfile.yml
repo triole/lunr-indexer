@@ -30,7 +30,7 @@ vars:
         sh: date
 
     GIT_COMMIT_NO:
-        sh: git rev-list --all --count
+        sh: git rev-list "origin/master" --count
 
     GIT_COMMIT_HASH:
         sh: git rev-parse HEAD
@@ -45,24 +45,28 @@ tasks:
             - task: buildall
 
     buildall:
+        env:
+            TASK_BIN: "{{.task_folder}}task"
         desc: build all architectures in build list
         cmds:
             - |
                 {{range $i, $line := .ARCHS_TO_BUILD | splitLines}}
-                    {{if $line}}task build ta="{{$line | regexFind "GOOS.*" }}" tf="{{$line | regexFind "[0-9a-z_+]+" }}"{{end}}
+                    {{if $line}}$TASK_BIN build ta="{{$line | regexFind "GOOS.*" }}" tf="{{$line | regexFind "[0-9a-z_+]+" }}"{{end}}
                 {{end}}
                 find build/ -type f | sort | xargs md5sum
 
     build:
         desc: build binary, also called by buildall
         cmds:
+            - cmd: pwd
             - cmd: mkdir -p $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}
             - cmd: >-
                 CGO_ENABLED=0 {{.ta}}
                 go build -o $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME}}
                 -ldflags "-s -w -X 'main.BUILDTAGS={
                 _subversion: {{.GIT_COMMIT_NO}}, Author: {{.AUTHOR}},
-                Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}}
+                Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}},
+                Based on: https://github.com/dim13/sct by Dimitri Sokolyuk <demon@dim13.org>
                 }'"
                 src/*.go
             - cmd: file $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME}}
