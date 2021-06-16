@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/alecthomas/kong v0.2.17
 	github.com/radovskyb/watcher v1.0.7
+	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/schollz/progressbar/v3 v3.8.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/yuin/goldmark v1.3.7

@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/russross/blackfriday/v2"
 	"github.com/yuin/goldmark"
 	goldmarkmeta "github.com/yuin/goldmark-meta"
-	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/parser"
 )
 
@@ -55,7 +55,9 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 		return
 	}
 
-	metaData := meta.Get(context)
+	metaData := goldmarkmeta.Get(context)
+	snippetPlain := makeSnippet(source)
+	snippet := markdownToHTML([]byte(snippetPlain))
 
 	href := strings.Replace(filename, mdPath, "", -1)
 	re := regexp.MustCompile("^/*")
@@ -64,34 +66,11 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 		href = "/" + href
 	}
 
-	// TODO: think about generating better tags
-	t := strings.Split(href[1:], "/")
-	tags := strings.Join(t[0:len(t)-1], ", ")
-
-	// TODO: improve snippet generator
-	snippet := ""
-	maxsniplen := 500
-	rx, _ := regexp.Compile("^[A-Za-z0-9].+$")
-	for _, el := range strings.Split(string(source), "\n") {
-		t := ""
-		if strings.Contains(el, ":") == false {
-			t = el
-		}
-		t = rx.FindString(t)
-		if len(t) > 10 && len(snippet) < maxsniplen {
-			snippet += t + "<br>"
-		}
-		if len(snippet) >= maxsniplen {
-			break
-		}
-	}
-
 	li := lunrIndexEntry{
-		// MetaData:    metaData,
 		Title:   getFromMeta("title", metaData, href),
 		Href:    href,
-		Tags:    tags,
-		Snippet: snippet,
+		Tags:    makeTags(href),
+		Snippet: string(snippet),
 		Content: string(source),
 	}
 
@@ -104,5 +83,40 @@ func getFromMeta(key string, meta map[string]interface{}, alt string) (r string)
 	if val, ok := meta[key]; ok {
 		r = val.(string)
 	}
+	return
+}
+
+func makeSnippet(source []byte) (snippet string) {
+	// TODO: continue to work in snippet generation
+	maxSnippetChars := 2000
+	maxSnippetLines := 15
+	rxHeader, _ := regexp.Compile("^([a-z]+:.*|---)")
+	c := 0
+	for _, line := range strings.Split(string(source), "\n") {
+		nextLine := ""
+		if rxHeader.MatchString(line) == false {
+			nextLine = line + "\n"
+		}
+		nextChars := len(snippet) + len(nextLine)
+
+		if nextChars > maxSnippetChars || c > maxSnippetLines {
+			break
+		} else {
+			snippet += nextLine
+			c++
+		}
+	}
+	return
+}
+
+func makeTags(href string) (tags string) {
+	// TODO: improve tag generation
+	t := strings.Split(href[1:], "/")
+	tags = strings.Join(t[0:len(t)-1], ", ")
+	return
+}
+
+func markdownToHTML(source []byte) (html []byte) {
+	html = blackfriday.Run(source)
 	return
 }
