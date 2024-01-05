@@ -1,11 +1,13 @@
-# Lunr Indexer
+# Lunr Indexer ![test](https://github.com/triole/lunr-indexer/actions/workflows/test.yaml/badge.svg) ![build](https://github.com/triole/lunr-indexer/actions/workflows/build.yaml/badge.svg)
 
-<!--- mdtoc: toc begin -->
+<!-- toc -->
 
-1.	[Synopsis](#synopsis)
-2.	[Index JSON Layout](#index-json-layout)
-3.	[Help & Usage](#help---usage)
-4.	[Disclaimer](#disclaimer)<!--- mdtoc: toc end -->
+- [Synopsis](#synopsis)
+- [Index JSON Layout](#index-json-layout)
+- [Help &amp; Usage](#help--usage)
+- [Disclaimer](#disclaimer)
+
+<!-- /toc -->
 
 ## Synopsis
 
