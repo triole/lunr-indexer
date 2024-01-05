@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	lilog "lunr-indexer/logging"
 	"os"
 	"path"
@@ -53,7 +52,7 @@ func runTest(mdFolder string, t *testing.T) {
 }
 
 func readLunrIndexJSON(filename string, t *testing.T) (li lunrIndex) {
-	content, err := ioutil.ReadFile(filename)
+	content, err := os.ReadFile(filename)
 	if err != nil {
 		t.Errorf("Can not open file %q", filename)
 	} else {

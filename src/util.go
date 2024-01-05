@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -19,7 +19,7 @@ func absPath(str string) string {
 }
 
 func readFile(filename string) (b []byte) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	lg.LogIfErr(err, "Can not read file %q", filename)
 	return
 }

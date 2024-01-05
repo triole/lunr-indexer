@@ -8,7 +8,7 @@ import (
 )
 
 func (l Logging) initContent(str string, itf interface{}) (*logrus.Entry, string) {
-	if l.PrintMessages == true {
+	if l.PrintMessages {
 		fmt.Printf(str, itf)
 	}
 	msg := l.cleanString(fmt.Sprintf(str, itf))
