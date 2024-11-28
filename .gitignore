@@ -2,3 +2,5 @@ build/
 tmp/
 go.trace
 .imdone/
+
+lunr-index.json
