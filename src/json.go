@@ -7,13 +7,13 @@ import (
 )
 
 func writeLunrIndexJSON(content lunrIndex, outFile string) {
-	lg.Log("Write lunr index to %q\n", outFile)
+	lg.Info("write lunr index to %q\n", outFile)
 	sort.Sort(lunrIndex(content))
 	jsonData, err := json.Marshal(content)
 	if err != nil {
-		lg.LogIfErr(err, "Can not marshal lunr index json %q", content)
+		lg.IfErrError(err, "can not marshal lunr index json %q", content)
 	} else {
 		err = os.WriteFile(outFile, jsonData, 0644)
-		lg.LogIfErr(err, "Can not write file %q\n", outFile)
+		lg.IfErrError(err, "can not write file %q\n", outFile)
 	}
 }

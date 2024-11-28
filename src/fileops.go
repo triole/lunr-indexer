@@ -18,10 +18,10 @@ func mkdir(foldername string) {
 func find(basedir string, rxFilter string) []string {
 	inf, err := os.Stat(basedir)
 	if err != nil {
-		lg.LogIfErrFatal(err, "Failed to access md folder %q\n", basedir)
+		lg.IfErrFatal(err, "Failed to access md folder %q\n", basedir)
 	}
 	if inf.IsDir() == false {
-		lg.LogFatal(
+		lg.Fatal(
 			"Not a folder %q. Please provide a directory "+
 				"to look for md files.\n", basedir,
 		)
@@ -38,11 +38,11 @@ func find(basedir string, rxFilter string) []string {
 					filelist = append(filelist, path)
 				}
 			} else {
-				lg.LogIfErr(err, "Stat file failed %q", path)
+				lg.IfErrError(err, "Stat file failed %q", path)
 			}
 		}
 		return nil
 	})
-	lg.LogIfErrFatal(err, "Find files failed for %q", basedir)
+	lg.IfErrFatal(err, "Find files failed for %q", basedir)
 	return filelist
 }

@@ -51,7 +51,7 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 	if err := markdown.Convert(
 		source, &buf, parser.WithContext(context),
 	); err != nil {
-		lg.LogIfErr(err, "Markdown parse fail %q", filename)
+		lg.IfErrError(err, "markdown parse fail %q", filename)
 		return
 	}
 

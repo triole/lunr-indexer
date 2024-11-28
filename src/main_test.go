@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	lilog "lunr-indexer/logging"
 	"os"
 	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/triole/logseal"
 )
 
 func TestMakeLunrIndex(t *testing.T) {
@@ -25,8 +26,7 @@ func runTest(mdFolder string, t *testing.T) {
 	var liAssert lunrIndex
 	var li lunrIndex
 
-	lg = lilog.Init(logFile)
-	lg.PrintMessages = false
+	lg = logseal.Init(logFile)
 	CLI.Watch = true
 
 	p, err := filepath.Abs(mdFolder)

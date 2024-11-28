@@ -2,27 +2,27 @@ package main
 
 import (
 	"fmt"
-	lilog "lunr-indexer/logging"
 	"os"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
+	"github.com/triole/logseal"
 )
 
 var (
-	lg lilog.Logging
+	lg logseal.Logseal
 )
 
 func main() {
 	parseArgs()
 
-	lg = lilog.Init(absPath(CLI.LogFile))
+	lg = logseal.Init(absPath(CLI.LogFile))
 
 	mdPath := absPath(CLI.Path)
 	outJSON := absPath(CLI.Output)
 
 	if _, err := os.Stat(outJSON); os.IsNotExist(err) == false && CLI.Force == false {
-		lg.LogWarn("Exitting. Output json file exists %q\n", outJSON)
+		lg.Warn("Exitting. Output json file exists %q\n", outJSON)
 		fmt.Println("Either choose a different output target or use -f/--force to overwrite")
 		os.Exit(0)
 	}
@@ -44,14 +44,14 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 	ln := len(mdFiles)
 
 	if len(mdFiles) < 1 {
-		lg.LogWarn("No md files found in %q\n", mdPath)
+		lg.Warn("No md files found in %q\n", mdPath)
 	} else {
 		chin := make(chan string, threads)
 		chout := make(chan lunrIndexEntry, threads)
 
 		potentialEmptyLine()
-		lg.Log("No of md files to process %d\n", ln)
-		lg.Log("Parallel threads %d\n", threads)
+		lg.Info("no of md files to process %d\n", ln)
+		lg.Info("parallel threads %d\n", threads)
 		potentialEmptyLine()
 
 		if showProgressBar == true {
@@ -79,7 +79,7 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 		potentialEmptyLine()
 		writeLunrIndexJSON(lunrIndex, outFile)
 
-		lg.Log("Done. It took %s\n", time.Since(start))
+		lg.Info("done, it took %s\n", time.Since(start))
 		potentialEmptyLine()
 	}
 
