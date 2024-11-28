@@ -21,7 +21,7 @@ func watch(mdPath string, outJSON string) {
 	go func() {
 		for {
 			select {
-			case _ = <-w.Event:
+			case <-w.Event:
 				chin <- time.Now()
 			case err := <-w.Error:
 				log.Fatalln(err)
@@ -54,7 +54,7 @@ func runRebuildOnce(mdPath string, outJSON string, chin chan time.Time) {
 		last = current
 		current = t
 		diff = diffReached(last, current)
-		if lastDiff == false && diff == true {
+		if !lastDiff && diff {
 			makeLunrIndex(mdPath, outJSON, CLI.Threads, false)
 		}
 	}
@@ -66,7 +66,7 @@ func diffReached(last time.Time, current time.Time) bool {
 }
 
 func ticker(chin chan time.Time) {
-	for _ = range time.Tick(time.Duration(1) * time.Second) {
+	for range time.Tick(time.Duration(1) * time.Second) {
 		chin <- time.Now()
 	}
 }

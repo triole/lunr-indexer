@@ -33,8 +33,6 @@ type lunrIndexEntry struct {
 	Content string `json:"content"`
 }
 
-type indexEntryMetadata map[string]interface{}
-
 func parseMdFile(filename string, mdPath string, chin chan string, chout chan lunrIndexEntry) {
 	chin <- filename
 
@@ -62,7 +60,7 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 	href := strings.Replace(filename, mdPath, "", -1)
 	re := regexp.MustCompile("^/*")
 	href = re.ReplaceAllString(href, "")
-	if strings.HasPrefix("/", href) == false {
+	if !strings.HasPrefix("/", href) {
 		href = "/" + href
 	}
 
@@ -75,7 +73,7 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 	}
 
 	chout <- li
-	_ = <-chin
+	<-chin
 }
 
 func getFromMeta(key string, meta map[string]interface{}, alt string) (r string) {
@@ -94,7 +92,7 @@ func makeSnippet(source []byte) (snippet string) {
 	c := 0
 	for _, line := range strings.Split(string(source), "\n") {
 		nextLine := ""
-		if rxHeader.MatchString(line) == false {
+		if !rxHeader.MatchString(line) {
 			nextLine = line + "\n"
 		}
 		nextChars := len(snippet) + len(nextLine)

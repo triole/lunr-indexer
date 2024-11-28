@@ -21,13 +21,13 @@ func main() {
 	mdPath := absPath(CLI.Path)
 	outJSON := absPath(CLI.Output)
 
-	if _, err := os.Stat(outJSON); os.IsNotExist(err) == false && CLI.Force == false {
+	if _, err := os.Stat(outJSON); !os.IsNotExist(err) && !CLI.Force {
 		lg.Warn("Exitting. Output json file exists %q\n", outJSON)
 		fmt.Println("Either choose a different output target or use -f/--force to overwrite")
 		os.Exit(0)
 	}
 
-	if CLI.Watch == true {
+	if CLI.Watch {
 		watch(mdPath, outJSON)
 	} else {
 		makeLunrIndex(mdPath, outJSON, CLI.Threads, true)
@@ -54,7 +54,7 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 		lg.Info("parallel threads %d\n", threads)
 		potentialEmptyLine()
 
-		if showProgressBar == true {
+		if showProgressBar {
 			bar = progressbar.Default(int64(ln))
 		}
 
@@ -64,7 +64,7 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 
 		c := 0
 		for li := range chout {
-			if showProgressBar == true {
+			if showProgressBar {
 				bar.Add(1)
 			}
 			lunrIndex = append(lunrIndex, li)

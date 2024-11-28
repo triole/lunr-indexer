@@ -7,7 +7,7 @@ import (
 )
 
 func potentialEmptyLine() {
-	if CLI.Watch == false {
+	if !CLI.Watch {
 		fmt.Printf("\n")
 	}
 }
