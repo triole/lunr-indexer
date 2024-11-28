@@ -4,26 +4,25 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-)
 
-var (
-// fi  os.FileInfo
-// err error
+	"github.com/triole/logseal"
 )
-
-// func mkdir(foldername string) {
-// 	os.MkdirAll(foldername, os.ModePerm)
-// }
 
 func find(basedir string, rxFilter string) []string {
+	if !exists(basedir) {
+		lg.Fatal(
+			"folder to search inside does not exist", logseal.F{"path": basedir},
+		)
+	}
 	inf, err := os.Stat(basedir)
 	if err != nil {
-		lg.IfErrFatal(err, "fail to access md folder %q\n", basedir)
+		lg.IfErrFatal(
+			"fail to access md folder", logseal.F{"error": err, "path": basedir},
+		)
 	}
 	if !inf.IsDir() {
 		lg.Fatal(
-			"not a folder %q, please provide a directory "+
-				"to look for md files\n", basedir,
+			"not a folder, can not look for md files", logseal.F{"path": basedir},
 		)
 	}
 
@@ -38,11 +37,24 @@ func find(basedir string, rxFilter string) []string {
 					filelist = append(filelist, path)
 				}
 			} else {
-				lg.IfErrError(err, "stat file failed %q", path)
+				lg.IfErrError(
+					"stat file failed", logseal.F{"error": err, "path": path},
+				)
 			}
 		}
 		return nil
 	})
-	lg.IfErrFatal(err, "find files failed for %q", basedir)
+	lg.IfErrFatal(
+		"find files failed", logseal.F{"error": err, "path": basedir},
+	)
 	return filelist
+}
+
+func exists(p string) (b bool) {
+	b = true
+	_, err := os.Stat(p)
+	if os.IsNotExist(err) {
+		b = false
+	}
+	return
 }

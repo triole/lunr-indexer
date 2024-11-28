@@ -22,7 +22,7 @@ func main() {
 	outJSON := absPath(CLI.Output)
 
 	if _, err := os.Stat(outJSON); !os.IsNotExist(err) && !CLI.Force {
-		lg.Warn("exit, output json file exists %q\n", outJSON)
+		lg.Warn("exit, output json file exists", logseal.F{"path": outJSON})
 		fmt.Println("either choose a different output target or use -f/--force to overwrite")
 		os.Exit(0)
 	}
@@ -44,14 +44,15 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 	ln := len(mdFiles)
 
 	if len(mdFiles) < 1 {
-		lg.Warn("no md files found in %q\n", mdPath)
+		lg.Warn("no md files found", logseal.F{"path": mdPath})
 	} else {
 		chin := make(chan string, threads)
 		chout := make(chan lunrIndexEntry, threads)
 
 		potentialEmptyLine()
-		lg.Info("no of md files to process %d\n", ln)
-		lg.Info("parallel threads %d\n", threads)
+		lg.Info(
+			"process parameters", logseal.F{"no_of_files": ln, "threads": threads},
+		)
 		potentialEmptyLine()
 
 		if showProgressBar {
@@ -79,7 +80,7 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 		potentialEmptyLine()
 		writeLunrIndexJSON(lunrIndex, outFile)
 
-		lg.Info("done, it took %s\n", time.Since(start))
+		lg.Info("done", logseal.F{"duration": time.Since(start)})
 		potentialEmptyLine()
 	}
 
