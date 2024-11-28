@@ -20,6 +20,6 @@ func absPath(str string) string {
 
 func readFile(filename string) (b []byte) {
 	b, err := os.ReadFile(filename)
-	lg.IfErrError(err, "Can not read file %q", filename)
+	lg.IfErrError(err, "can not read file %q", filename)
 	return
 }

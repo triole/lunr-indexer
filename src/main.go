@@ -22,8 +22,8 @@ func main() {
 	outJSON := absPath(CLI.Output)
 
 	if _, err := os.Stat(outJSON); !os.IsNotExist(err) && !CLI.Force {
-		lg.Warn("Exitting. Output json file exists %q\n", outJSON)
-		fmt.Println("Either choose a different output target or use -f/--force to overwrite")
+		lg.Warn("exit, output json file exists %q\n", outJSON)
+		fmt.Println("either choose a different output target or use -f/--force to overwrite")
 		os.Exit(0)
 	}
 
@@ -44,7 +44,7 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 	ln := len(mdFiles)
 
 	if len(mdFiles) < 1 {
-		lg.Warn("No md files found in %q\n", mdPath)
+		lg.Warn("no md files found in %q\n", mdPath)
 	} else {
 		chin := make(chan string, threads)
 		chout := make(chan lunrIndexEntry, threads)
