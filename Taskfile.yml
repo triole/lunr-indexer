@@ -17,6 +17,12 @@ tasks:
           export SOURCE_FOLDER={{.SOURCE_FOLDER}}
           curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh | bash
 
+  up:
+    desc: upgrade go dependencies
+    cmds:
+      - cmd: go get -u ./...
+      - cmd: go mod tidy
+
   build:
     desc: build binary using remote ghwfe script, requires curl
     cmds:
