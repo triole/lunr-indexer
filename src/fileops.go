@@ -53,12 +53,3 @@ func find(basedir string, rxFilter string) []string {
 	}
 	return filelist
 }
-
-func exists(p string) (b bool) {
-	b = true
-	_, err := os.Stat(p)
-	if os.IsNotExist(err) {
-		b = false
-	}
-	return
-}
