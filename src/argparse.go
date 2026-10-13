@@ -16,7 +16,7 @@ var (
 	BUILDTAGS      string
 	appName        = "lunr indexer"
 	appDescription = "parse markdown files from a folder and generate a lunr index json"
-	appMainversion = "0.1"
+	appMainversion = "0.2"
 )
 
 var CLI struct {
