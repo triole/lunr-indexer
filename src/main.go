@@ -9,6 +9,7 @@ import (
 
 func main() {
 	parseArgs()
+	defer Close()
 
 	mdPath := absPath(CLI.Path)
 	outJSON := absPath(CLI.Output)
