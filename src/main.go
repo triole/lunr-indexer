@@ -56,13 +56,11 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 			}(file)
 		}
 
-		// Close the channel after all goroutines complete
-		go func() {
-			wg.Wait()
-			close(resultChan)
-		}()
+		// Wait for all workers, then close the channel
+		wg.Wait()
+		close(resultChan)
 
-		// Collect results
+		// Collect results (single consumer, no data race)
 		for entry := range resultChan {
 			// Skip empty entries (from failed parses)
 			if entry.Href != "" && entry.Title != "" {
