@@ -27,7 +27,7 @@ var CLI struct {
 	Interval    int32  `help:"watch interval to check for changes in seconds" default:"60" short:"i"`
 	Force       bool   `help:"force overwrite of output json file" default:"false" short:"f"`
 	LogLevel    string `help:"log level: debug, info, warn, or error" short:"v" default:"info"`
-	LogFile     string `help:"log file path" short:"l" default:"${logfile}"`
+	LogFile     string `help:"log file path" short:"l"`
 	VersionFlag bool   `help:"display version" short:"V"`
 }
 
@@ -42,10 +42,9 @@ func parseArgs() {
 			Summary: true,
 		}),
 		kong.Vars{
-			"curdir":  curdir,
-			"logfile": path.Join(os.TempDir(), alnum(appName)+".log"),
-			"output":  path.Join(curdir, "lunr-index.json"),
-			"proc":    strconv.Itoa(runtime.NumCPU()),
+			"curdir": curdir,
+			"output": path.Join(curdir, "lunr-index.json"),
+			"proc":   strconv.Itoa(runtime.NumCPU()),
 		},
 	)
 	_ = ctx.Run()
@@ -55,12 +54,10 @@ func parseArgs() {
 		os.Exit(0)
 	}
 
-	// Set log level
 	SetLogLevel(ParseLogLevel(CLI.LogLevel))
 
-	// Set log file if specified
 	if err := SetLogFile(CLI.LogFile); err != nil {
-		fmt.Fprintf(os.Stderr, "error: failed to open log file: %v\n", err)
+		fmt.Fprintf(os.Stderr, "[ERROR] failed to open log file: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -68,7 +65,7 @@ func parseArgs() {
 func printBuildTags(buildtags string) {
 	regexp, _ := regexp.Compile(`({|}|,)`)
 	s := regexp.ReplaceAllString(buildtags, "\n")
-	s = strings.Replace(s, "_subversion: ", "Version: "+appMainversion+".", -1)
+	s = strings.ReplaceAll(s, "_subversion: ", "Version: "+appMainversion+".")
 	fmt.Printf("%s\n", s)
 }
 

@@ -67,8 +67,8 @@ func (l *Logger) Fatal(format string, args ...interface{}) {
 	l.logger.Fatalf("[FATAL] "+format+"\n", args...)
 }
 
-// SetLogFile sets the log output file path
 func SetLogFile(path string) error {
+
 	if path == "" {
 		return nil
 	}

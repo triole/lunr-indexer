@@ -5,8 +5,6 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"github.com/schollz/progressbar/v3"
 )
 
 func main() {
@@ -33,7 +31,6 @@ func main() {
 func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar bool) {
 	start := time.Now()
 
-	var bar *progressbar.ProgressBar
 	var lunrIndex lunrIndex
 
 	mdFiles := find(mdPath, ".md$")
@@ -50,10 +47,6 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 			"process parameters: %d files, %d threads", fileCount, threads,
 		)
 		potentialEmptyLine()
-
-		if showProgressBar {
-			bar = progressbar.Default(int64(fileCount))
-		}
 
 		// Start worker goroutines for each file
 		for _, file := range mdFiles {
@@ -75,9 +68,6 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 		for entry := range resultChan {
 			// Skip empty entries (from failed parses)
 			if entry.Href != "" || entry.Title != "" {
-				if showProgressBar {
-					bar.Add(1)
-				}
 				lunrIndex = append(lunrIndex, entry)
 			}
 		}
