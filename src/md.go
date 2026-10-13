@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"html"
 	"regexp"
 	"strings"
 
@@ -57,15 +58,20 @@ func parseMdFileToEntry(filename string, mdPath string) lunrIndexEntry {
 	metaData := goldmarkmeta.Get(context)
 	snippetPlain := makeSnippet(source)
 	snippet := markdownToHTML([]byte(snippetPlain))
+	// Escape HTML to prevent XSS when snippet is rendered in browsers
+	snippetEscaped := html.EscapeString(string(snippet))
 
 	href := createHref(filename, mdPath)
+	title := getFromMeta("title", metaData, href)
+	// Escape HTML in title to prevent XSS from frontmatter
+	titleEscaped := html.EscapeString(title)
 
 	return lunrIndexEntry{
-		Title:   getFromMeta("title", metaData, href),
+		Title:   titleEscaped,
 		Href:    href,
-		Tags:    makeTags(href),
-		Snippet: string(snippet),
-		Content: string(source),
+		Tags:    makeTags(href), // Href is a path, safe from XSS
+		Snippet: snippetEscaped,
+		Content: string(source), // Raw markdown content is safe (not HTML)
 	}
 }
 
