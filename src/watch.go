@@ -31,24 +31,25 @@ func watch(mdPath string, outJSON string) {
 		for {
 			select {
 			case <-ctx.Done():
+				close(chin)
 				return
 			case <-w.Event:
 				chin <- time.Now()
 			case err := <-w.Error:
 				logger.Fatal("%s", err)
 			case <-w.Closed:
-				cancel()
+				close(chin)
 				return
 			}
 		}
 	}()
 
 	if err := w.AddRecursive(mdPath); err != nil {
-		logger.Fatal("%s", err)
+		logger.Fatal("can not add path to watcher: %v", err)
 	}
 
 	if err := w.Start(itv); err != nil {
-		logger.Fatal("%s", err)
+		logger.Fatal("can not start watcher: %v", err)
 	}
 
 	w.Wait()
