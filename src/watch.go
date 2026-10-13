@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,6 +10,9 @@ import (
 )
 
 func watch(mdPath string, outJSON string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	w := watcher.New()
 
 	r := regexp.MustCompile(".md$")
@@ -21,11 +25,14 @@ func watch(mdPath string, outJSON string) {
 	go func() {
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case <-w.Event:
 				chin <- time.Now()
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
+				cancel()
 				return
 			}
 		}
@@ -35,9 +42,7 @@ func watch(mdPath string, outJSON string) {
 		log.Fatalln(err)
 	}
 
-	go func() {
-		w.Wait()
-	}()
+	w.Wait()
 
 	if err := w.Start(time.Duration(CLI.Interval) * time.Second); err != nil {
 		log.Fatalln(err)
