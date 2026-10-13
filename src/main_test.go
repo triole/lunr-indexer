@@ -8,8 +8,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/triole/logseal"
 )
 
 func TestMakeLunrIndex(t *testing.T) {
@@ -20,13 +18,16 @@ func TestMakeLunrIndex(t *testing.T) {
 func runTest(mdFolder string, t *testing.T) {
 	arr := strings.Split(mdFolder, "/")
 	suffix := arr[len(arr)-1]
-	logFile := path.Join(os.TempDir(), "lunr-indexer_test_"+suffix+".log")
+	// Log file path still generated but logger uses standard logger
+	_ = path.Join(os.TempDir(), "lunr-indexer_test_"+suffix+".log")
 	outFile := path.Join(os.TempDir(), "lunr-indexer_test_"+suffix+".json")
 
 	var liAssert lunrIndex
 	var li lunrIndex
 
-	lg = logseal.Init(logFile)
+	// Set log level if needed
+	SetLogLevel(LevelInfo)
+
 	CLI.Watch = true
 
 	p, err := filepath.Abs(mdFolder)

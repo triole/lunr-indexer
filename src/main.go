@@ -7,23 +7,18 @@ import (
 	"time"
 
 	"github.com/schollz/progressbar/v3"
-	"github.com/triole/logseal"
 )
 
-var (
-	lg logseal.Logseal
-)
+
 
 func main() {
 	parseArgs()
-
-	lg = logseal.Init(absPath(CLI.LogFile))
 
 	mdPath := absPath(CLI.Path)
 	outJSON := absPath(CLI.Output)
 
 	if _, err := os.Stat(outJSON); !os.IsNotExist(err) && !CLI.Force {
-		lg.Warn("exit, output json file exists", logseal.F{"path": outJSON})
+		logger.Warn("exit, output json file exists: %s", outJSON)
 		fmt.Println("either choose a different output target or use -f/--force to overwrite")
 		os.Exit(0)
 	}
@@ -45,14 +40,14 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 	fileCount := len(mdFiles)
 
 	if fileCount < 1 {
-		lg.Warn("no md files found", logseal.F{"path": mdPath})
+		logger.Warn("no md files found in %s", mdPath)
 	} else {
 		resultChan := make(chan lunrIndexEntry, threads)
 		var wg sync.WaitGroup
 
 		potentialEmptyLine()
-		lg.Info(
-			"process parameters", logseal.F{"no_of_files": fileCount, "threads": threads},
+		logger.Info(
+			"process parameters: %d files, %d threads", fileCount, threads,
 		)
 		potentialEmptyLine()
 
@@ -87,7 +82,7 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 		potentialEmptyLine()
 		writeLunrIndexJSON(lunrIndex, outFile)
 
-		lg.Info("done", logseal.F{"duration": time.Since(start)})
+		logger.Info("done in %s", time.Since(start))
 		potentialEmptyLine()
 	}
 

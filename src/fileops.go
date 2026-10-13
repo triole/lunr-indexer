@@ -4,26 +4,18 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-
-	"github.com/triole/logseal"
 )
 
 func find(basedir string, rxFilter string) []string {
 	if !exists(basedir) {
-		lg.Fatal(
-			"folder to search inside does not exist", logseal.F{"path": basedir},
-		)
+		logger.Fatal("folder to search inside does not exist: %s", basedir)
 	}
 	inf, err := os.Stat(basedir)
 	if err != nil {
-		lg.IfErrFatal(
-			"fail to access md folder", logseal.F{"error": err, "path": basedir},
-		)
+		logger.Fatal("fail to access md folder: %v at %s", err, basedir)
 	}
 	if !inf.IsDir() {
-		lg.Fatal(
-			"not a folder, can not look for md files", logseal.F{"path": basedir},
-		)
+		logger.Fatal("not a folder, can not look for md files: %s", basedir)
 	}
 
 	filelist := []string{}
@@ -37,16 +29,14 @@ func find(basedir string, rxFilter string) []string {
 					filelist = append(filelist, path)
 				}
 			} else {
-				lg.IfErrError(
-					"stat file failed", logseal.F{"error": err, "path": path},
-				)
+				logger.Error("stat file failed: %v at %s", err, path)
 			}
 		}
 		return nil
 	})
-	lg.IfErrFatal(
-		"find files failed", logseal.F{"error": err, "path": basedir},
-	)
+	if err != nil {
+		logger.Fatal("find files failed: %v at %s", err, basedir)
+	}
 	return filelist
 }
 

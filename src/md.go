@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/russross/blackfriday/v2"
-	"github.com/triole/logseal"
 	"github.com/yuin/goldmark"
 	goldmarkmeta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/parser"
@@ -49,9 +48,8 @@ func parseMdFileToEntry(filename string, mdPath string) lunrIndexEntry {
 	if err := markdown.Convert(
 		source, &buf, parser.WithContext(context),
 	); err != nil {
-		lg.IfErrError(
-			"parsing markdown failed",
-			logseal.F{"error": err, "path": filename},
+		logger.Error(
+			"parsing markdown failed: %v in %s", err, filename,
 		)
 		return lunrIndexEntry{}
 	}

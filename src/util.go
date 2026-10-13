@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/triole/logseal"
 )
 
 func potentialEmptyLine() {
@@ -16,15 +14,17 @@ func potentialEmptyLine() {
 
 func absPath(str string) string {
 	p, err := filepath.Abs(str)
-	lg.IfErrFatal("invalid file path", logseal.F{"error": err, "path": CLI.Path})
+	if err != nil {
+		logger.Fatal("invalid file path: %v at %s", err, str)
+	}
 	return p
 }
 
 func readFile(filename string) (b []byte) {
 	b, err := os.ReadFile(filename)
-	lg.IfErrError(
-		"can not read file %q",
-		logseal.F{"error": err, "path": filename},
-	)
-	return
+	if err != nil {
+		logger.Error("can not read file %s: %v", filename, err)
+		return nil
+	}
+	return b
 }
