@@ -82,11 +82,6 @@ func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin cha
 	}
 }
 
-func diffReached(last time.Time, current time.Time) bool {
-	diff := current.Sub(last)
-	return diff > debounceInterval
-}
-
 func ticker(ctx context.Context, chin chan time.Time, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
