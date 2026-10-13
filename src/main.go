@@ -44,11 +44,17 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 
 		logger.Info("run indexer: %d files, %d threads", fileCount, threads)
 
-		// Start worker goroutines for each file
+		// Start worker goroutines for each file with panic recovery
 		for _, file := range mdFiles {
 			wg.Add(1)
 			go func(f string) {
 				defer wg.Done()
+				// Recover from any panic to prevent goroutine leak
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Error("panic parsing %s: %v", f, r)
+					}
+				}()
 				entry := parseMdFileToEntry(f, mdPath)
 				resultChan <- entry
 			}(file)

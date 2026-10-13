@@ -78,9 +78,10 @@ func getFromMeta(key string, meta map[string]interface{}, alt string) (r string)
 }
 
 func makeSnippet(source []byte) (snippet string) {
-	// TODO: continue to work in snippet generation
-	maxSnippetChars := 2000
-	maxSnippetLines := 15
+	const (
+		maxSnippetChars = 2000
+		maxSnippetLines = 15
+	)
 	rxHeader, _ := regexp.Compile("^([a-z]+:.*|---)")
 	c := 0
 	for _, line := range strings.Split(string(source), "\n") {
