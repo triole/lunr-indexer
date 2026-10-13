@@ -19,7 +19,10 @@ func find(basedir string, rxFilter string) []string {
 	}
 
 	filelist := []string{}
-	rxf, _ := regexp.Compile(rxFilter)
+	rxf, err := regexp.Compile(rxFilter)
+	if err != nil {
+		logger.Fatal("invalid regex pattern: %v for pattern %s", err, rxFilter)
+	}
 
 	err = filepath.Walk(basedir, func(path string, f os.FileInfo, err error) error {
 		if rxf.MatchString(path) {
