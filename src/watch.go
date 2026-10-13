@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"regexp"
 	"time"
 
@@ -36,7 +35,7 @@ func watch(mdPath string, outJSON string) {
 			case <-w.Event:
 				chin <- time.Now()
 			case err := <-w.Error:
-				log.Fatalln(err)
+				logger.Fatal("%s", err)
 			case <-w.Closed:
 				cancel()
 				return
@@ -45,11 +44,11 @@ func watch(mdPath string, outJSON string) {
 	}()
 
 	if err := w.AddRecursive(mdPath); err != nil {
-		log.Fatalln(err)
+		logger.Fatal("%s", err)
 	}
 
 	if err := w.Start(itv); err != nil {
-		log.Fatalln(err)
+		logger.Fatal("%s", err)
 	}
 
 	w.Wait()
