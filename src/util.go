@@ -19,21 +19,32 @@ func absPath(str string) string {
 func validateDir(path string, description string) {
 	// Check for null bytes (path traversal attempt)
 	if strings.Contains(path, "\x00") {
-		logger.Fatal("invalid path, contains null byte: %s:", description)
+		logger.Fatal("invalid path, contains null byte: %s", description)
 	}
 
-	// Check path exists and is accessible
-	info, err := os.Stat(path)
+	// Resolve to absolute path first to prevent traversal attacks
+	resolvedPath, err := filepath.Abs(path)
 	if err != nil {
-		logger.Fatal("can not access %s '%s': %v", description, path, err)
+		logger.Fatal("invalid path, cannot resolve absolute path: %v", err)
 	}
 
-	// Ensure it's a directory
+	// Use Lstat to not follow symlinks - reject symlinks for security
+	info, err := os.Lstat(resolvedPath)
+	if err != nil {
+		logger.Fatal("can not access %s %q: %v", description, path, err)
+	}
+
+	// Reject symlinks (security: prevents writing/reading via symlink targets)
+	if info.Mode()&os.ModeSymlink != 0 {
+		logger.Fatal("%s %q is a symbolic link - symlinks not allowed", description, path)
+	}
+
+	// Ensure it's a directory (after symlink check, race-condition safe)
 	if !info.IsDir() {
-		logger.Fatal("%s '%s' is not a directory", description, path)
+		logger.Fatal("%s %q is not a directory", description, path)
 	}
 
-	logger.Debug("valid %s: %s", description, path)
+	logger.Debug("valid %s: %s, resolved to: %s)", description, path, resolvedPath)
 }
 
 func readFile(filename string) (b []byte) {

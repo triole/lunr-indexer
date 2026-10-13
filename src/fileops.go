@@ -15,14 +15,20 @@ func find(basedir string, rxFilter string) []string {
 		logger.Fatal("invalid regex pattern: %v for pattern %s", err, rxFilter)
 	}
 
-	err = filepath.Walk(basedir, func(path string, f os.FileInfo, err error) error {
+	err = filepath.Walk(basedir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			logger.Warn("stat file failed: %v at %s", err, path)
 			return nil
 		}
 
 		// Skip directories
-		if f.IsDir() {
+		if info.IsDir() {
+			return nil
+		}
+
+		// Skip symbolic links (security: prevent following symlinks in traversal)
+		if info.Mode()&os.ModeSymlink != 0 {
+			logger.Debug("skipping symbolic link: %s", path)
 			return nil
 		}
 
