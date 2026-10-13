@@ -35,7 +35,7 @@ func runTest(mdFolder string, t *testing.T) {
 		t.Errorf("Test failed. Can not set md folder %q", mdFolder)
 	}
 	if mdFolder != "../testdata/no_md" {
-		makeLunrIndex(p, outFile, 4, false)
+		makeLunrIndex(p, outFile, 4)
 
 		li = readLunrIndexJSON(outFile, t)
 		assertJSONFile := path.Join(mdFolder, "assert.json")
