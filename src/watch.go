@@ -19,8 +19,8 @@ func watch(mdPath string, outJSON string) {
 	w.AddFilterHook(watcher.RegexFilterHook(r, false))
 
 	chin := make(chan time.Time)
-	go ticker(chin)
-	go runRebuildOnce(mdPath, outJSON, chin)
+	go ticker(ctx, chin)
+	go runRebuildOnce(ctx, mdPath, outJSON, chin)
 
 	go func() {
 		for {
@@ -49,18 +49,23 @@ func watch(mdPath string, outJSON string) {
 	w.Wait()
 }
 
-func runRebuildOnce(mdPath string, outJSON string, chin chan time.Time) {
+func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin chan time.Time) {
 	current := time.Now()
 	last := time.Now()
 	diff := diffReached(last, current)
 	var lastDiff bool
-	for t := range chin {
-		lastDiff = diff
-		last = current
-		current = t
-		diff = diffReached(last, current)
-		if !lastDiff && diff {
-			makeLunrIndex(mdPath, outJSON, CLI.Threads, false)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case t := <-chin:
+			lastDiff = diff
+			last = current
+			current = t
+			diff = diffReached(last, current)
+			if !lastDiff && diff {
+				makeLunrIndex(mdPath, outJSON, CLI.Threads, false)
+			}
 		}
 	}
 }
@@ -70,8 +75,15 @@ func diffReached(last time.Time, current time.Time) bool {
 	return diff > time.Duration(800)*time.Millisecond
 }
 
-func ticker(chin chan time.Time) {
-	for range time.Tick(time.Duration(1) * time.Second) {
-		chin <- time.Now()
+func ticker(ctx context.Context, chin chan time.Time) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			chin <- time.Now()
+		}
 	}
 }
