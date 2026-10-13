@@ -1,18 +1,19 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Logger handles application logging with levels
 type Logger struct {
-	logger *log.Logger
-	level  LogLevel
-	mu     sync.Mutex
-	file   *os.File
+	level   LogLevel
+	mu      sync.Mutex
+	file    *os.File
+	useFile bool // tracks if we're using file output vs direct stdout/stderr
 }
 
 type LogLevel int
@@ -25,15 +26,15 @@ const (
 )
 
 var logger = &Logger{
-	logger: log.New(os.Stderr, "", 0),
-	level:  LevelInfo,
+	level:   LevelInfo,
+	useFile: false,
 }
 
 func (l *Logger) Debug(format string, args ...interface{}) {
 	if l.level <= LevelDebug {
 		l.mu.Lock()
 		defer l.mu.Unlock()
-		l.logger.Printf("[DEBUG] "+format+"\n", args...)
+		l.write("[DEBUG]", format, args...)
 	}
 }
 
@@ -41,7 +42,7 @@ func (l *Logger) Info(format string, args ...interface{}) {
 	if l.level <= LevelInfo {
 		l.mu.Lock()
 		defer l.mu.Unlock()
-		l.logger.Printf("[INFO]  "+format+"\n", args...)
+		l.write("[INFO]", format, args...)
 	}
 }
 
@@ -49,7 +50,7 @@ func (l *Logger) Warn(format string, args ...interface{}) {
 	if l.level <= LevelWarn {
 		l.mu.Lock()
 		defer l.mu.Unlock()
-		l.logger.Printf("[WARN]  "+format+"\n", args...)
+		l.write("[WARN]", format, args...)
 	}
 }
 
@@ -57,19 +58,37 @@ func (l *Logger) Error(format string, args ...interface{}) {
 	if l.level <= LevelError {
 		l.mu.Lock()
 		defer l.mu.Unlock()
-		l.logger.Printf("[ERROR] "+format+"\n", args...)
+		l.write("[ERROR]", format, args...)
 	}
 }
 
 func (l *Logger) Fatal(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.logger.Fatalf("[FATAL] "+format+"\n", args...)
+	l.write("[FATAL]", format, args...)
+	os.Exit(1)
+}
+
+// write handles the actual output to file or stdout/stderr
+func (l *Logger) write(prefix string, format string, args ...interface{}) {
+	timestamp := time.Now().Format("2006-01-02 15:04:05.000 MST")
+	message := fmt.Sprintf(format, args...)
+	output := fmt.Sprintf("%s %s %s\n", timestamp, prefix, message)
+	if l.useFile && l.file != nil {
+		fmt.Fprint(l.file, output)
+	} else {
+		fmt.Fprint(os.Stderr, output)
+	}
 }
 
 func SetLogFile(path string) error {
-
 	if path == "" {
+		// Close file if previously opened
+		if logger.file != nil {
+			logger.file.Close()
+			logger.file = nil
+			logger.useFile = false
+		}
 		return nil
 	}
 
@@ -79,19 +98,13 @@ func SetLogFile(path string) error {
 	}
 
 	// Open with append mode - creates file if it doesn't exist
-	// O_CREATE: create if not exists
-	// O_WRONLY: write-only
-	// O_APPEND: append to end of file instead of overwriting
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 
 	logger.file = file
-
-	// Create a new logger with file as output
-	logger.logger = log.New(file, "", log.LstdFlags)
-
+	logger.useFile = true
 	return nil
 }
 
@@ -122,5 +135,6 @@ func Close() {
 	if logger.file != nil {
 		logger.file.Close()
 		logger.file = nil
+		logger.useFile = false
 	}
 }

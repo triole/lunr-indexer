@@ -1,17 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-func potentialEmptyLine() {
-	if !CLI.Watch {
-		fmt.Printf("\n")
-	}
-}
 
 func absPath(str string) string {
 	p, err := filepath.Abs(str)
@@ -39,7 +32,7 @@ func validatePath(path string, description string) {
 		logger.Fatal("%s '%s' is not a directory", description, path)
 	}
 
-	logger.Debug("validated %s: %s", description, path)
+	logger.Debug("valid %s: %s", description, path)
 }
 
 func readFile(filename string) (b []byte) {
