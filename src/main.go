@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
@@ -41,40 +42,46 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 	var lunrIndex lunrIndex
 
 	mdFiles := find(mdPath, ".md$")
-	ln := len(mdFiles)
+	fileCount := len(mdFiles)
 
-	if len(mdFiles) < 1 {
+	if fileCount < 1 {
 		lg.Warn("no md files found", logseal.F{"path": mdPath})
 	} else {
-		chin := make(chan string, threads)
-		chout := make(chan lunrIndexEntry, threads)
+		resultChan := make(chan lunrIndexEntry, threads)
+		var wg sync.WaitGroup
 
 		potentialEmptyLine()
 		lg.Info(
-			"process parameters", logseal.F{"no_of_files": ln, "threads": threads},
+			"process parameters", logseal.F{"no_of_files": fileCount, "threads": threads},
 		)
 		potentialEmptyLine()
 
 		if showProgressBar {
-			bar = progressbar.Default(int64(ln))
+			bar = progressbar.Default(int64(fileCount))
 		}
 
-		for _, fil := range mdFiles {
-			go parseMdFile(fil, mdPath, chin, chout)
+		// Start worker goroutines for each file
+		for _, file := range mdFiles {
+			wg.Add(1)
+			go func(f string) {
+				defer wg.Done()
+				entry := parseMdFileToEntry(f, mdPath)
+				resultChan <- entry
+			}(file)
 		}
 
-		c := 0
-		for li := range chout {
+		// Close the channel after all goroutines complete
+		go func() {
+			wg.Wait()
+			close(resultChan)
+		}()
+
+		// Collect results
+		for entry := range resultChan {
 			if showProgressBar {
 				bar.Add(1)
 			}
-			lunrIndex = append(lunrIndex, li)
-			c++
-			if c >= ln {
-				close(chin)
-				close(chout)
-				break
-			}
+			lunrIndex = append(lunrIndex, entry)
 		}
 
 		potentialEmptyLine()

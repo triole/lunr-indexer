@@ -34,9 +34,8 @@ type lunrIndexEntry struct {
 	Content string `json:"content"`
 }
 
-func parseMdFile(filename string, mdPath string, chin chan string, chout chan lunrIndexEntry) {
-	chin <- filename
-
+// parseMdFileToEntry parses a markdown file and returns a lunrIndexEntry.
+func parseMdFileToEntry(filename string, mdPath string) lunrIndexEntry {
 	var buf bytes.Buffer
 	source := readFile(filename)
 
@@ -54,29 +53,29 @@ func parseMdFile(filename string, mdPath string, chin chan string, chout chan lu
 			"parsing markdown failed",
 			logseal.F{"error": err, "path": filename},
 		)
-		return
+		return lunrIndexEntry{}
 	}
 
 	metaData := goldmarkmeta.Get(context)
 	snippetPlain := makeSnippet(source)
 	snippet := markdownToHTML([]byte(snippetPlain))
 
-	href := strings.Replace(filename, mdPath, "", -1)
-	re := regexp.MustCompile("^/*")
-	href = re.ReplaceAllString(href, "")
-	if !strings.HasPrefix("/", href) {
-		href = "/" + href
-	}
+	href := createHref(filename, mdPath)
 
-	li := lunrIndexEntry{
+	return lunrIndexEntry{
 		Title:   getFromMeta("title", metaData, href),
 		Href:    href,
 		Tags:    makeTags(href),
 		Snippet: string(snippet),
 		Content: string(source),
 	}
+}
 
-	chout <- li
+// parseMdFile maintains backward compatibility with channel-based interface.
+func parseMdFile(filename string, mdPath string, chin chan string, chout chan lunrIndexEntry) {
+	chin <- filename
+	entry := parseMdFileToEntry(filename, mdPath)
+	chout <- entry
 	<-chin
 }
 
@@ -121,4 +120,14 @@ func makeTags(href string) (tags string) {
 func markdownToHTML(source []byte) (html []byte) {
 	html = blackfriday.Run(source)
 	return
+}
+
+// createHref generates a clean URL path from the filename relative to mdPath.
+func createHref(filename string, mdPath string) string {
+	href := strings.Replace(filename, mdPath, "", -1)
+	href = strings.TrimLeft(href, "/")
+	if href != "" {
+		href = "/" + href
+	}
+	return href
 }
