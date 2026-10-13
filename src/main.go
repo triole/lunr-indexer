@@ -14,7 +14,7 @@ func main() {
 	mdPath := absPath(CLI.Path)
 	outJSON := absPath(CLI.Output)
 
-	validatePath(mdPath, "input directory")
+	validateDir(mdPath, "input directory")
 
 	if _, err := os.Stat(outJSON); !os.IsNotExist(err) && !CLI.Force {
 		logger.Warn("exit, output json file exists: %s", outJSON)
@@ -25,11 +25,11 @@ func main() {
 	if CLI.Watch {
 		watch(mdPath, outJSON)
 	} else {
-		makeLunrIndex(mdPath, outJSON, CLI.Threads, true)
+		makeLunrIndex(mdPath, outJSON, CLI.Threads)
 	}
 }
 
-func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar bool) {
+func makeLunrIndex(mdPath string, outFile string, threads int) {
 	start := time.Now()
 
 	var lunrIndex lunrIndex
@@ -75,5 +75,4 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 		writeLunrIndexJSON(lunrIndex, outFile)
 		logger.Info("done in %s", time.Since(start))
 	}
-
 }

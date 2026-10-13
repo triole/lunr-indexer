@@ -36,11 +36,6 @@ func validateDir(path string, description string) {
 	logger.Debug("valid %s: %s", description, path)
 }
 
-// validatePath checks if a path is safe to use (wrapper for backward compatibility)
-func validatePath(path string, description string) {
-	validateDir(path, description)
-}
-
 func readFile(filename string) (b []byte) {
 	b, err := os.ReadFile(filename)
 	if err != nil {

@@ -7,7 +7,6 @@ import (
 )
 
 func find(basedir string, rxFilter string) []string {
-	// Validate directory using shared utility
 	validateDir(basedir, "folder to search")
 
 	filelist := []string{}

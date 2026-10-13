@@ -114,7 +114,7 @@ func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin cha
 				state.mu.Unlock()
 
 				// Execute rebuild outside the lock
-				makeLunrIndex(mdPath, outJSON, CLI.Threads, false)
+				makeLunrIndex(mdPath, outJSON, CLI.Threads)
 			})
 			state.mu.Unlock()
 		}
