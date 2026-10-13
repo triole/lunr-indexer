@@ -55,22 +55,29 @@ func watch(mdPath string, outJSON string) {
 }
 
 func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin chan time.Time) {
-	current := time.Now()
-	last := time.Now()
-	diff := diffReached(last, current)
-	var lastDiff bool
+	var rebuildTimer *time.Timer
+	var rebuildPending bool
+
 	for {
 		select {
 		case <-ctx.Done():
-			return
-		case t := <-chin:
-			lastDiff = diff
-			last = current
-			current = t
-			diff = diffReached(last, current)
-			if !lastDiff && diff {
-				makeLunrIndex(mdPath, outJSON, CLI.Threads, false)
+			if rebuildTimer != nil {
+				rebuildTimer.Stop()
 			}
+			return
+		case <-chin:
+			// Reset the debounce timer on each event
+			if rebuildPending {
+				// Cancel pending rebuild and set a new timer
+				rebuildTimer.Stop()
+			}
+
+			rebuildPending = true
+			rebuildTimer = time.AfterFunc(debounceInterval, func() {
+				rebuildPending = false
+				rebuildTimer = nil
+				makeLunrIndex(mdPath, outJSON, CLI.Threads, false)
+			})
 		}
 	}
 }
