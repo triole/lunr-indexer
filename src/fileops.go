@@ -4,21 +4,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 func find(basedir string, rxFilter string) []string {
-	// Check path exists, is accessible, and is a directory (single Stat call)
-	inf, err := os.Stat(basedir)
-	if os.IsNotExist(err) {
-		logger.Fatal("folder to search inside does not exist: %s", basedir)
-	}
-	if err != nil {
-		logger.Fatal("fail to access md folder: %v at %s", err, basedir)
-	}
-	if !inf.IsDir() {
-		logger.Fatal("not a folder, can not look for md files: %s", basedir)
-	}
+	// Validate directory using shared utility
+	validateDir(basedir, "folder to search")
 
 	filelist := []string{}
 	rxf, err := regexp.Compile(rxFilter)
@@ -28,18 +18,12 @@ func find(basedir string, rxFilter string) []string {
 
 	err = filepath.Walk(basedir, func(path string, f os.FileInfo, err error) error {
 		if err != nil {
-			logger.Error("stat file failed: %v at %s", err, path)
+			logger.Warn("stat file failed: %v at %s", err, path)
 			return nil
 		}
 
 		// Skip directories
 		if f.IsDir() {
-			return nil
-		}
-
-		// Check for null bytes in path (path traversal defense)
-		if strings.Contains(path, "\x00") {
-			logger.Warn("skipping file with null byte in path: %s", path)
 			return nil
 		}
 

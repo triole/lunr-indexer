@@ -14,11 +14,12 @@ func absPath(str string) string {
 	return p
 }
 
-// validatePath checks if a path is safe to use
-func validatePath(path string, description string) {
+// validateDir checks if a path is safe to use
+// Calls logger.Fatal and exits if validation fails
+func validateDir(path string, description string) {
 	// Check for null bytes (path traversal attempt)
 	if strings.Contains(path, "\x00") {
-		logger.Fatal("invalid %s: path contains null byte", description)
+		logger.Fatal("invalid path, contains null byte: %s:", description)
 	}
 
 	// Check path exists and is accessible
@@ -33,6 +34,11 @@ func validatePath(path string, description string) {
 	}
 
 	logger.Debug("valid %s: %s", description, path)
+}
+
+// validatePath checks if a path is safe to use (wrapper for backward compatibility)
+func validatePath(path string, description string) {
+	validateDir(path, description)
 }
 
 func readFile(filename string) (b []byte) {
