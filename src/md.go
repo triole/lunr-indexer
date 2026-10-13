@@ -69,14 +69,6 @@ func parseMdFileToEntry(filename string, mdPath string) lunrIndexEntry {
 	}
 }
 
-// parseMdFile maintains backward compatibility with channel-based interface.
-func parseMdFile(filename string, mdPath string, chin chan string, chout chan lunrIndexEntry) {
-	chin <- filename
-	entry := parseMdFileToEntry(filename, mdPath)
-	chout <- entry
-	<-chin
-}
-
 func getFromMeta(key string, meta map[string]interface{}, alt string) (r string) {
 	r = alt
 	if val, ok := meta[key]; ok {
