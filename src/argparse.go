@@ -24,7 +24,7 @@ var CLI struct {
 	Output      string `help:"json file to write output into" short:"o" default:"${output}"`
 	Threads     int    `help:"max threads, default no of avail. cpu threads" short:"t" default:"${proc}"`
 	Watch       bool   `help:"watch folder and run rebuild on file change" short:"w"`
-	Interval    int32  `help:"watch interval to check for changes in seconds" default:"60" short:"i"`
+	Interval    int64  `help:"watch interval to check for changes in seconds" default:"60" short:"i"`
 	Force       bool   `help:"force overwrite of output json file" default:"false" short:"f"`
 	LogLevel    string `help:"log level: debug, info, warn, or error" short:"v" default:"info"`
 	LogFile     string `help:"log file path" short:"l"`

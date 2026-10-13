@@ -9,7 +9,12 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
+const (
+	debounceInterval = 800 * time.Millisecond
+)
+
 func watch(mdPath string, outJSON string) {
+	logger.Info("start watcher, path: %s", mdPath)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -19,7 +24,8 @@ func watch(mdPath string, outJSON string) {
 	w.AddFilterHook(watcher.RegexFilterHook(r, false))
 
 	chin := make(chan time.Time)
-	go ticker(ctx, chin)
+	itv := time.Duration(CLI.Interval) * time.Second
+	go ticker(ctx, chin, itv)
 	go runRebuildOnce(ctx, mdPath, outJSON, chin)
 
 	go func() {
@@ -42,7 +48,7 @@ func watch(mdPath string, outJSON string) {
 		log.Fatalln(err)
 	}
 
-	if err := w.Start(time.Duration(CLI.Interval) * time.Second); err != nil {
+	if err := w.Start(itv); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -72,11 +78,11 @@ func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin cha
 
 func diffReached(last time.Time, current time.Time) bool {
 	diff := current.Sub(last)
-	return diff > time.Duration(800)*time.Millisecond
+	return diff > debounceInterval
 }
 
-func ticker(ctx context.Context, chin chan time.Time) {
-	ticker := time.NewTicker(time.Second)
+func ticker(ctx context.Context, chin chan time.Time, interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {

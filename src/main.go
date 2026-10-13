@@ -42,9 +42,7 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 		resultChan := make(chan lunrIndexEntry, threads)
 		var wg sync.WaitGroup
 
-		logger.Info(
-			"run indexer: %d files, %d threads", fileCount, threads,
-		)
+		logger.Info("run indexer: %d files, %d threads", fileCount, threads)
 
 		// Start worker goroutines for each file
 		for _, file := range mdFiles {
