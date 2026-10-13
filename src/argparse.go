@@ -26,7 +26,8 @@ var CLI struct {
 	Watch       bool   `help:"watch folder and run rebuild on file change" short:"w"`
 	Interval    int32  `help:"watch interval to check for changes in seconds" default:"60" short:"i"`
 	Force       bool   `help:"force overwrite of output json file" default:"false" short:"f"`
-	LogLevel    string `help:"log level: debug, info, warn, or error" short:"l" default:"info"`
+	LogLevel    string `help:"log level: debug, info, warn, or error" short:"v" default:"info"`
+	LogFile     string `help:"log file path" short:"l" default:"${logfile}"`
 	VersionFlag bool   `help:"display version" short:"V"`
 }
 
@@ -53,7 +54,15 @@ func parseArgs() {
 		printBuildTags(BUILDTAGS)
 		os.Exit(0)
 	}
-	// ctx.FatalIfErrorf(err)
+
+	// Set log level
+	SetLogLevel(ParseLogLevel(CLI.LogLevel))
+
+	// Set log file if specified
+	if err := SetLogFile(CLI.LogFile); err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to open log file: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func printBuildTags(buildtags string) {
