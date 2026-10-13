@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 func find(basedir string, rxFilter string) []string {
@@ -25,15 +26,24 @@ func find(basedir string, rxFilter string) []string {
 	}
 
 	err = filepath.Walk(basedir, func(path string, f os.FileInfo, err error) error {
+		if err != nil {
+			logger.Error("stat file failed: %v at %s", err, path)
+			return nil
+		}
+
+		// Skip directories
+		if f.IsDir() {
+			return nil
+		}
+
+		// Check for null bytes in path (path traversal defense)
+		if strings.Contains(path, "\x00") {
+			logger.Warn("skipping file with null byte in path: %s", path)
+			return nil
+		}
+
 		if rxf.MatchString(path) {
-			inf, err := os.Stat(path)
-			if err == nil {
-				if !inf.IsDir() {
-					filelist = append(filelist, path)
-				}
-			} else {
-				logger.Error("stat file failed: %v at %s", err, path)
-			}
+			filelist = append(filelist, path)
 		}
 		return nil
 	})
