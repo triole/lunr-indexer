@@ -73,10 +73,13 @@ func makeLunrIndex(mdPath string, outFile string, threads int, showProgressBar b
 
 		// Collect results
 		for entry := range resultChan {
-			if showProgressBar {
-				bar.Add(1)
+			// Skip empty entries (from failed parses)
+			if entry.Href != "" || entry.Title != "" {
+				if showProgressBar {
+					bar.Add(1)
+				}
+				lunrIndex = append(lunrIndex, entry)
 			}
-			lunrIndex = append(lunrIndex, entry)
 		}
 
 		potentialEmptyLine()
