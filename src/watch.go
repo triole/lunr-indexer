@@ -42,11 +42,11 @@ func watch(mdPath string, outJSON string) {
 		log.Fatalln(err)
 	}
 
-	w.Wait()
-
 	if err := w.Start(time.Duration(CLI.Interval) * time.Second); err != nil {
 		log.Fatalln(err)
 	}
+
+	w.Wait()
 }
 
 func runRebuildOnce(mdPath string, outJSON string, chin chan time.Time) {
