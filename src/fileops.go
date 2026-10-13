@@ -8,10 +8,11 @@ import (
 )
 
 func find(basedir string, rxFilter string) []string {
-	if !exists(basedir) {
+	// Check path exists, is accessible, and is a directory (single Stat call)
+	inf, err := os.Stat(basedir)
+	if os.IsNotExist(err) {
 		logger.Fatal("folder to search inside does not exist: %s", basedir)
 	}
-	inf, err := os.Stat(basedir)
 	if err != nil {
 		logger.Fatal("fail to access md folder: %v at %s", err, basedir)
 	}
