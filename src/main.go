@@ -9,13 +9,13 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-
-
 func main() {
 	parseArgs()
 
 	mdPath := absPath(CLI.Path)
 	outJSON := absPath(CLI.Output)
+
+	validatePath(mdPath, "input directory")
 
 	if _, err := os.Stat(outJSON); !os.IsNotExist(err) && !CLI.Force {
 		logger.Warn("exit, output json file exists: %s", outJSON)
