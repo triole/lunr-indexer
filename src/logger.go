@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -66,5 +67,23 @@ func (l *Logger) Fatal(format string, args ...interface{}) {
 }
 
 func SetLogLevel(level LogLevel) {
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
 	logger.level = level
+}
+
+// ParseLogLevel converts a string to LogLevel
+func ParseLogLevel(s string) LogLevel {
+	switch strings.ToLower(s) {
+	case "debug":
+		return LevelDebug
+	case "info":
+		return LevelInfo
+	case "warn", "warning":
+		return LevelWarn
+	case "error":
+		return LevelError
+	default:
+		return LevelInfo // default fallback
+	}
 }

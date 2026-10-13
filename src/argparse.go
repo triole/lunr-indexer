@@ -26,7 +26,7 @@ var CLI struct {
 	Watch       bool   `help:"watch folder and run rebuild on file change" short:"w"`
 	Interval    int32  `help:"watch interval to check for changes in seconds" default:"60" short:"i"`
 	Force       bool   `help:"force overwrite of output json file" default:"false" short:"f"`
-	LogFile     string `help:"log file" default:"${logfile}" short:"l"`
+	LogLevel    string `help:"log level: debug, info, warn, or error" short:"l" default:"info"`
 	VersionFlag bool   `help:"display version" short:"V"`
 }
 
