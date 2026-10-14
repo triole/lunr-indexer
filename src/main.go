@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -17,8 +16,7 @@ func main() {
 	validateDir(mdPath, "input directory")
 
 	if _, err := os.Stat(outJSON); !os.IsNotExist(err) && !CLI.Force {
-		logger.Warn("exit, output json file exists: %s", outJSON)
-		fmt.Println("either choose a different output target or use -f/--force to overwrite")
+		logger.Warn("output json file exists: %s, use --force to overwrite", outJSON)
 		os.Exit(0)
 	}
 
@@ -32,47 +30,52 @@ func main() {
 func makeLunrIndex(mdPath string, outFile string, threads int) {
 	start := time.Now()
 
-	var lunrIndex lunrIndex
+	var lunrIdx lunrIndex
 
 	mdFiles := find(mdPath, ".md$")
 	fileCount := len(mdFiles)
 
 	if fileCount < 1 {
 		logger.Warn("no md files found in %s", mdPath)
-	} else {
-		resultChan := make(chan lunrIndexEntry, threads)
-		var wg sync.WaitGroup
-
-		logger.Info("run indexer: %d files, %d threads", fileCount, threads)
-
-		// Start worker goroutines for each file with panic recovery
-		for _, file := range mdFiles {
-			wg.Add(1)
-			go func(f string) {
-				defer wg.Done()
-				// Recover from any panic to prevent goroutine leak
-				defer func() {
-					if r := recover(); r != nil {
-						logger.Error("panic parsing %s: %v", f, r)
-					}
-				}()
-				entry := parseMdFileToEntry(f, mdPath)
-				resultChan <- entry
-			}(file)
-		}
-
-		// Wait for all workers, then close the channel
-		wg.Wait()
-		close(resultChan)
-
-		// Collect results (single consumer, no data race)
-		for entry := range resultChan {
-			// Skip empty entries (from failed parses)
-			if entry.Href != "" && entry.Title != "" {
-				lunrIndex = append(lunrIndex, entry)
-			}
-		}
-		writeLunrIndexJSON(lunrIndex, outFile)
-		logger.Info("done in %s", time.Since(start))
+		return
 	}
+
+	logger.Info("run indexer: %d files, %d threads", fileCount, threads)
+
+	// Pre-allocate slice for all entries
+	entries := make([]lunrIndexEntry, fileCount)
+
+	// Start worker goroutines for each file with panic recovery
+	var workersWg sync.WaitGroup
+	for i, file := range mdFiles {
+		workersWg.Add(1)
+		go func(f string, idx int) {
+			defer workersWg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Error("panic parsing %s: %v", f, r)
+					// Leave empty entry on panic
+				}
+			}()
+			entry := parseMdFileToEntry(f, mdPath)
+			entries[idx] = entry
+		}(file, i)
+	}
+
+	// Wait for all workers to finish
+	workersWg.Wait()
+
+	// Filter out empty entries
+	collectedEntries := make(lunrIndex, 0, fileCount)
+	for _, entry := range entries {
+		if entry.Href != "" && entry.Title != "" {
+			collectedEntries = append(collectedEntries, entry)
+		}
+	}
+
+	// Use collected entries instead of the parameter-shadowed variable
+	lunrIdx = collectedEntries
+
+	writeLunrIndexJSON(lunrIdx, outFile)
+	logger.Info("done in %s", time.Since(start))
 }

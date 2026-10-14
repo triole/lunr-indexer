@@ -28,7 +28,8 @@ func runTest(mdFolder string, t *testing.T) {
 	// Set log level if needed
 	SetLogLevel(LevelInfo)
 
-	CLI.Watch = true
+	// Ensure we're not in watch mode for direct indexing
+	CLI.Watch = false
 
 	p, err := filepath.Abs(mdFolder)
 	if err != nil {
