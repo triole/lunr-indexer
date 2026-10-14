@@ -25,8 +25,6 @@ func watch(mdPath string, outJSON string) {
 
 	// Buffered channel prevents blocking when multiple events arrive concurrently
 	chin := make(chan time.Time, CLI.Threads)
-	itv := time.Duration(CLI.Interval) * time.Second
-	go ticker(ctx, chin, itv)
 	go runRebuildOnce(ctx, mdPath, outJSON, chin)
 
 	go func() {
@@ -50,6 +48,7 @@ func watch(mdPath string, outJSON string) {
 		logger.Fatal("can not add path to watcher: %v", err)
 	}
 
+	itv := time.Duration(CLI.Interval) * time.Second
 	if err := w.Start(itv); err != nil {
 		logger.Fatal("can not start watcher: %v", err)
 	}
@@ -61,7 +60,6 @@ func watch(mdPath string, outJSON string) {
 type rebuildState struct {
 	mu      sync.Mutex
 	timer   *time.Timer
-	pending bool
 	stopped bool
 }
 
@@ -78,7 +76,6 @@ func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin cha
 				state.timer.Stop()
 				state.timer = nil
 			}
-			state.pending = false
 			state.mu.Unlock()
 			return
 		case <-chin:
@@ -90,11 +87,10 @@ func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin cha
 			}
 
 			// Reset the debounce timer on each event
-			if state.pending && state.timer != nil {
+			if state.timer != nil {
 				state.timer.Stop()
 			}
 
-			state.pending = true
 			state.timer = time.AfterFunc(debounceInterval, func() {
 				// Lock to check stopped state and update atomically
 				state.mu.Lock()
@@ -103,13 +99,6 @@ func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin cha
 					return
 				}
 
-				// Double-check timer hasn't been replaced/stopped
-				if state.timer == nil {
-					state.mu.Unlock()
-					return
-				}
-
-				state.pending = false
 				state.timer = nil
 				state.mu.Unlock()
 
@@ -117,19 +106,6 @@ func runRebuildOnce(ctx context.Context, mdPath string, outJSON string, chin cha
 				makeLunrIndex(mdPath, outJSON, CLI.Threads)
 			})
 			state.mu.Unlock()
-		}
-	}
-}
-
-func ticker(ctx context.Context, chin chan time.Time, interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			chin <- time.Now()
 		}
 	}
 }
